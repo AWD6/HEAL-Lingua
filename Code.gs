@@ -1,5 +1,5 @@
 /**
- * HEAL English usage logging endpoint for a Google Sheet-bound Apps Script.
+ * HEAL Lingua usage logging endpoint for a Google Sheet-bound Apps Script.
  * Logs room/date/timestamp events; Burmese STT audio is handled separately only when the interpreter listens for Burmese.
  */
 function doPost(e) {
@@ -128,7 +128,7 @@ function doGet(e) {
     }
     // Preserve the previous JSON health response for callers outside the
     // AI Translator. Only the two explicitly named interpreter actions use JSONP.
-    return json_({ ok: true, service: 'HEAL English usage logger' });
+    return json_({ ok: true, service: 'HEAL Lingua usage logger' });
   } catch (err) {
     return jsonpOrJson_({ ok: false, error: String(err && err.message || err) }, callback);
   }

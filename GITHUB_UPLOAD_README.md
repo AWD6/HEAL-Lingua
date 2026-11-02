@@ -1,6 +1,8 @@
-# HEAL English — v11 AI Translator update
+# HEAL Lingua — v11 AI Translator update
 
-Upload the contents of this folder to the repository root. `index.html` must stay at the root. Keep `interpreter-stt.js`, `assets/audio/my/`, and `vendor/` in their package paths.
+Brand name: **HEAL Lingua** — **Healthcare Empathy Across Languages**.
+
+Upload the contents of this folder to the repository root. `index.html` must stay at the root. Keep `social-preview.png`, `interpreter-stt.js`, `assets/audio/my/`, and `vendor/` in their package paths.
 
 This update starts Google Apps Script translation at once alongside the direct Google Translate request, shortens end-of-speech waits, removes the keyboard-dictation fallback, and uses Google Cloud Speech-to-Text (`my-MM`) for Burmese listening. Thai, English, and Chinese listening continue to use browser Speech Recognition.
 

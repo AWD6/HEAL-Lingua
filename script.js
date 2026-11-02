@@ -1,9 +1,10 @@
 /* ============================================================
-   HEAL English v7 — script.js
+   HEAL Lingua v7 — script.js
    Quiz-mode Role Play + Phrase Card Selector
    (Audited multilingual phrases, Burmese readiness, Thai phonetics for EN/ZH)
    ============================================================ */
 
+// Keep persisted keys stable so existing saved phrases and room selection survive the rebrand.
 const STORAGE_KEY = 'heal_english_v6';
 const MULTILINGUAL_MIGRATION_KEY = 'heal_multilingual_seed_audited_v1';
 const CHINESE_THAI_PHONETIC_MIGRATION_KEY = 'heal_chinese_thai_phonetic_v4';

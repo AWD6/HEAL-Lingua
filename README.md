@@ -1,6 +1,17 @@
-# HEAL English
+# HEAL Lingua
+
+**Healthcare Empathy Across Languages**
 
 เว็บแอปฝึกและช่วยสื่อสารภาษาในงานบริการผู้ป่วย
+
+เผยแพร่บน GitHub Pages: <https://awd6.github.io/HEAL-English/>
+
+## การเผยแพร่บน GitHub Pages
+
+- คง repository และ URL เดิมไว้ที่ `awd6/HEAL-English` และ `https://awd6.github.io/HEAL-English/` เพื่อไม่ให้ลิงก์เดิมเปลี่ยน
+- อัปโหลด **เนื้อหาภายในโฟลเดอร์ `HEAL-English-main`** ไปยังตำแหน่งเผยแพร่เดิม โดยให้ `index.html` อยู่ที่ root ของแหล่งเผยแพร่
+- คงไฟล์ `social-preview.png` และโครงสร้าง `assets/audio/my`, `vendor` กับไฟล์ JavaScript ไว้ตามเดิม จากนั้น commit ไปยัง branch/โฟลเดอร์ที่ตั้งค่า GitHub Pages ใช้อยู่
+- เปิด URL ข้างต้นหลัง GitHub Pages เผยแพร่เสร็จ และอนุญาตใช้ไมโครโฟนผ่าน HTTPS
 
 ## อัปเดตล่าสุด
 
