@@ -1,6 +1,7 @@
 /* Cloud Speech-to-Text capture for Burmese (my-MM). */
 let interpreterMyanmarCapture=null;
 function stopMyanmarCloudRecognition(){
+  if(typeof lastRecognitionEndTime!=='undefined')lastRecognitionEndTime=Date.now();
   const c=interpreterMyanmarCapture; interpreterMyanmarCapture=null;
   if(!c)return; c.active=false;
   if(c.processor){c.processor.onaudioprocess=null;try{c.processor.disconnect()}catch(e){}}

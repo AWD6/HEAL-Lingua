@@ -408,8 +408,10 @@ let speechRate = 0.75;
 let currentGoogleAudio = null;
 let interpreterPrimedAudio = null;
 let interpreterAudioContext = null;
+let interpreterAudioCompressor = null;
 let interpreterAudioGain = null;
 let interpreterAudioSource = null;
+let lastRecognitionEndTime = 0;
 let speechNoticeTimer = null;
 let currentRoom = '';
 let roomChangeOnly = false;
@@ -432,6 +434,7 @@ const jaTranslationTasks = new Map();
 const translationMemory = new Map();
 const translationTasks = new Map();
 const interpreterTtsMemory = new Map();
+const interpreterTtsTasks = new Map();
 
 /* ── Init ───────────────────────────────────────────────────── */
 function init() {
@@ -2470,40 +2473,137 @@ function primeInterpreterAudioContext() {
     if (!Ctx) return false;
     if (!interpreterAudioContext) {
       interpreterAudioContext=new Ctx();
+      interpreterAudioCompressor=interpreterAudioContext.createDynamicsCompressor();
+      interpreterAudioCompressor.threshold.value=-22;
+      interpreterAudioCompressor.knee.value=12;
+      interpreterAudioCompressor.ratio.value=4.5;
+      interpreterAudioCompressor.attack.value=0.003;
+      interpreterAudioCompressor.release.value=0.18;
       interpreterAudioGain=interpreterAudioContext.createGain();
-      // Google TTS files are often quiet on iOS. Keep the browser volume at
-      // 100% and add a moderate gain without clipping normal speech.
-      interpreterAudioGain.gain.value=1.55;
+      // Consistent loud makeup gain after peak/RMS normalization + dynamics compression
+      interpreterAudioGain.gain.value=1.65;
+      interpreterAudioCompressor.connect(interpreterAudioGain);
       interpreterAudioGain.connect(interpreterAudioContext.destination);
     }
     if (interpreterAudioContext.state==='suspended') interpreterAudioContext.resume().catch(()=>{});
     const buffer=interpreterAudioContext.createBuffer(1,1,22050);
     const source=interpreterAudioContext.createBufferSource();
-    source.buffer=buffer; source.connect(interpreterAudioGain); source.start(0);
+    source.buffer=buffer;
+    source.connect(interpreterAudioCompressor || interpreterAudioGain);
+    source.start(0);
     return true;
   } catch(e) { return false; }
 }
-async function playInterpreterDecodedAudio(text, lang) {
-  const ctx=interpreterAudioContext, gain=interpreterAudioGain;
-  if (!ctx || !gain || !text) return false;
-  const configuredApi=String(window.HEAL_TRANSLATOR_API_BASE || '').replace(/\/+$/,'');
-  // Without a CORS proxy, WebAudio cannot reliably decode Google's
-  // cross-origin audio in Safari. Use the gesture-unlocked HTMLAudioElement
-  // path instead of probing the unrelated usage logger or retrying CORS fetches.
-  if (!configuredApi) return false;
-  let data=null;
-  const controller=new AbortController();
-  const timer=setTimeout(()=>controller.abort(),3200);
+function normalizeAudioBuffer(buffer) {
+  if (!buffer || !buffer.numberOfChannels || !buffer.length) return buffer;
   try {
-    const res=await fetch(configuredApi+'/google-tts?tl='+encodeURIComponent(lang)+'&q='+encodeURIComponent(text),{cache:'no-store',signal:controller.signal});
-    if (res.ok) data=await res.arrayBuffer();
-  } catch(e) {} finally { clearTimeout(timer); }
-  if (!data?.byteLength) return false;
-  return playInterpreterAudioBuffer(data,text);
+    let peak=0, sumSq=0, activeCount=0;
+    for (let ch=0; ch<buffer.numberOfChannels; ch++) {
+      const data=buffer.getChannelData(ch);
+      for (let i=0; i<data.length; i++) {
+        const abs=Math.abs(data[i]);
+        if (abs>peak) peak=abs;
+        if (abs>=0.008) { sumSq+=data[i]*data[i]; activeCount++; }
+      }
+    }
+    if (peak<0.001) return buffer;
+    const activeRms=activeCount>0 ? Math.sqrt(sumSq/activeCount) : peak*0.5;
+    const targetRms=0.25;
+    const targetPeak=0.94;
+    const rmsGain=activeRms>0.005 ? (targetRms/activeRms) : 1.6;
+    const peakGain=targetPeak/peak;
+    // Boost quiet clips strongly while keeping loud clips at the exact same target ceiling
+    const gain=Math.min(3.6, Math.max(0.95, Math.min(rmsGain, peakGain*1.22)));
+    for (let ch=0; ch<buffer.numberOfChannels; ch++) {
+      const data=buffer.getChannelData(ch);
+      for (let i=0; i<data.length; i++) {
+        const scaled=data[i]*gain;
+        const abs=Math.abs(scaled);
+        data[i]=abs>0.90
+          ? Math.sign(scaled)*(0.90+0.08*Math.tanh((abs-0.90)/0.08))
+          : scaled;
+      }
+    }
+  } catch(e) {}
+  return buffer;
 }
-async function playInterpreterAudioBuffer(data,text) {
-  const ctx=interpreterAudioContext, gain=interpreterAudioGain;
-  if (!ctx || !gain || !data?.byteLength) return false;
+async function waitForMicReleaseBeforeSpeaking() {
+  const elapsed=Date.now()-(lastRecognitionEndTime || 0);
+  if (elapsed>=0 && elapsed<220) {
+    await new Promise(resolve=>setTimeout(resolve,220-elapsed));
+  }
+  if (interpreterAudioContext && interpreterAudioContext.state==='suspended') {
+    try { await interpreterAudioContext.resume(); } catch(e) {}
+  }
+}
+async function fetchNormalizedTtsBytes(text, lang) {
+  const cleanText=String(text || '').trim();
+  if (!cleanText) return null;
+  const tl=lang==='zh' ? 'zh-CN' : (lang==='ja-JP' ? 'ja' : (lang==='en-US' ? 'en' : (lang==='th-TH' ? 'th' : (lang==='my-MM' ? 'my' : lang))));
+  const cacheKey=`${tl}\u0000${cleanText}`;
+  const cached=interpreterTtsMemory.get(cacheKey);
+  if (cached?.kind==='bytes' && cached.bytes?.byteLength) return cached.bytes;
+  if (interpreterTtsTasks.has(cacheKey)) return interpreterTtsTasks.get(cacheKey);
+
+  const task=(async()=>{
+    const preparedPath=tl==='my' ? PREBUILT_MY_AUDIO_BY_TEXT[cleanText] : '';
+    if (preparedPath) {
+      try {
+        const res=await fetch(new URL(preparedPath,document.baseURI).href,{cache:'force-cache'});
+        if (res.ok) {
+          const bytes=await res.arrayBuffer();
+          if (bytes?.byteLength) {
+            interpreterTtsMemory.set(cacheKey,{kind:'bytes',bytes});
+            return bytes;
+          }
+        }
+      } catch(e) {}
+    }
+    const configuredApi=String(window.HEAL_TRANSLATOR_API_BASE || '').replace(/\/+$/,'');
+    if (configuredApi) {
+      const controller=new AbortController();
+      const timer=setTimeout(()=>controller.abort(),3200);
+      try {
+        const res=await fetch(configuredApi+'/google-tts?tl='+encodeURIComponent(tl)+'&q='+encodeURIComponent(cleanText),{cache:'no-store',signal:controller.signal});
+        if (res.ok) {
+          const bytes=await res.arrayBuffer();
+          if (bytes?.byteLength) {
+            interpreterTtsMemory.set(cacheKey,{kind:'bytes',bytes});
+            if (interpreterTtsMemory.size>100) interpreterTtsMemory.delete(interpreterTtsMemory.keys().next().value);
+            return bytes;
+          }
+        }
+      } catch(e) {} finally { clearTimeout(timer); }
+    }
+    try {
+      const result=await requestAppsScript('interpreter-tts',{tl,q:cleanText},9000);
+      if (result?.ok && result.audio) {
+        const binary=atob(result.audio);
+        const arr=new Uint8Array(binary.length);
+        for (let i=0;i<binary.length;i++) arr[i]=binary.charCodeAt(i);
+        const bytes=arr.buffer;
+        if (bytes.byteLength) {
+          interpreterTtsMemory.set(cacheKey,{kind:'bytes',bytes});
+          if (interpreterTtsMemory.size>100) interpreterTtsMemory.delete(interpreterTtsMemory.keys().next().value);
+          return bytes;
+        }
+      }
+    } catch(e) {}
+    return null;
+  })();
+
+  interpreterTtsTasks.set(cacheKey,task);
+  try { return await task; } finally { interpreterTtsTasks.delete(cacheKey); }
+}
+async function playInterpreterDecodedAudio(text, lang) {
+  const bytes=await fetchNormalizedTtsBytes(text,lang);
+  if (!bytes?.byteLength) return false;
+  return playInterpreterAudioBuffer(bytes,text,0.96);
+}
+async function playInterpreterAudioBuffer(data, text, playbackRate=0.96) {
+  if (!interpreterAudioContext) primeInterpreterAudioContext();
+  const ctx=interpreterAudioContext, targetNode=interpreterAudioCompressor || interpreterAudioGain;
+  if (!ctx || !targetNode || !data?.byteLength) return false;
   try {
     if (ctx.state==='suspended') {
       const resumed=await Promise.race([
@@ -2512,15 +2612,26 @@ async function playInterpreterAudioBuffer(data,text) {
       ]);
       if (!resumed || ctx.state!=='running') return false;
     }
-    const buffer=await ctx.decodeAudioData(data.slice(0));
-    if (!buffer || !buffer.duration) return false;
+    const rawBuffer=await ctx.decodeAudioData(data.slice(0));
+    if (!rawBuffer || !rawBuffer.duration) return false;
+    const buffer=normalizeAudioBuffer(rawBuffer);
     if (interpreterAudioSource) { try { interpreterAudioSource.stop(); } catch(e) {} }
-    const source=ctx.createBufferSource(); source.buffer=buffer; source.connect(gain); interpreterAudioSource=source;
+    const source=ctx.createBufferSource();
+    source.buffer=buffer;
+    const rate=Math.min(1.5,Math.max(0.65,Number(playbackRate) || 0.96));
+    try { source.playbackRate.value=rate; } catch(e) {}
+    source.connect(targetNode);
+    interpreterAudioSource=source;
     return await new Promise(resolve=>{
       let finished=false;
       const finish=ok=>{if(finished)return;finished=true;if(interpreterAudioSource===source)interpreterAudioSource=null;resolve(ok);};
-      const timer=setTimeout(()=>{try{source.stop()}catch(e){};finish(false)},Math.max(2600,Math.min(9000,buffer.duration*1000+1200)));
-      source.onended=()=>{clearTimeout(timer);finish(true)};
+      const effectiveDuration=(buffer.duration/rate)*1000;
+      const timer=setTimeout(()=>{try{source.stop()}catch(e){};finish(false)},Math.max(2800,Math.min(14000,effectiveDuration+1400)));
+      source.onended=()=>{
+        clearTimeout(timer);
+        document.getElementById('speechNotice')?.classList.remove('visible');
+        finish(true);
+      };
       try { source.start(0); } catch(e) { clearTimeout(timer); finish(false); }
     });
   } catch(e) { return false; }
@@ -2528,15 +2639,32 @@ async function playInterpreterAudioBuffer(data,text) {
 
 function primeGoogleAudioPlayback() {
   try {
-    if (currentGoogleAudio) currentGoogleAudio.pause();
-    if (interpreterPrimedAudio && interpreterPrimedAudio!==currentGoogleAudio) interpreterPrimedAudio.pause();
-    const audio=new Audio(makeSilentWavDataUri()); audio.setAttribute('playsinline',''); audio.volume=0; currentGoogleAudio=audio; interpreterPrimedAudio=audio;
+    if (interpreterPrimedAudio && interpreterPrimedAudio.dataset?.userActivated==='true') {
+      interpreterPrimedAudio.volume=1;
+      interpreterPrimedAudio.muted=false;
+      return;
+    }
+    const silentUri=makeSilentWavDataUri();
+    const audio=new Audio(silentUri);
+    audio.setAttribute('playsinline','');
+    audio.volume=1;
+    audio.muted=false;
+    interpreterPrimedAudio=audio;
     const attempt=audio.play();
     if (attempt && typeof attempt.then==='function') {
-      attempt.then(()=>{audio.pause();audio.currentTime=0;audio.volume=1;audio.dataset.userActivated='true';})
-        .catch(()=>{audio.volume=1;if(currentGoogleAudio===audio)currentGoogleAudio=null;if(interpreterPrimedAudio===audio)interpreterPrimedAudio=null;});
+      attempt.then(()=>{
+        if (audio.src===silentUri) {
+          audio.pause();
+          audio.currentTime=0;
+        }
+        audio.volume=1;
+        audio.muted=false;
+        audio.dataset.userActivated='true';
+      }).catch(()=>{
+        if (interpreterPrimedAudio===audio) interpreterPrimedAudio=null;
+      });
     }
-  } catch(e) { currentGoogleAudio=null; interpreterPrimedAudio=null; }
+  } catch(e) { interpreterPrimedAudio=null; }
 }
 function playNativeMyanmarTts(text) {
   const synth=window.speechSynthesis;
@@ -2546,7 +2674,7 @@ function playNativeMyanmarTts(text) {
   try {
     synth.cancel();
     const utterance=new SpeechSynthesisUtterance(text);
-    utterance.lang=voice.lang; utterance.voice=voice; utterance.rate=0.85;
+    utterance.lang=voice.lang; utterance.voice=voice; utterance.rate=0.88; utterance.pitch=1.0; utterance.volume=1.0;
     utterance.onstart=()=>document.getElementById('speechNotice')?.classList.remove('visible');
     utterance.onerror=()=>showSpeechNotice('เสียงภาษาเมียนมาร์ของอุปกรณ์เล่นไม่สำเร็จ');
     synth.speak(utterance);
@@ -2561,35 +2689,52 @@ function playNativeFallback(text, lang) {
     synth.cancel();
     const locale=speechLocale(lang);
     const voices=synth.getVoices ? synth.getVoices() : [];
-    const voice=voices.find(v=>v.lang.replace('_','-').toLowerCase()===locale.toLowerCase())
-      || voices.find(v=>v.lang.toLowerCase().startsWith(String(lang).toLowerCase()));
-    // Never claim success when the device has no voice for the requested language.
-    // This lets the Google/proxy path report a real failure and expose replay UI.
+    const preferredNames = {
+      ja: ['Kyoko', 'O-Ren', 'Google 日本語', 'Google Japanese', 'Microsoft Nanami', 'Microsoft Haruka Desktop', 'Microsoft Haruka', 'Microsoft Ayumi'],
+      'ja-JP': ['Kyoko', 'O-Ren', 'Google 日本語', 'Google Japanese', 'Microsoft Nanami', 'Microsoft Haruka Desktop', 'Microsoft Haruka', 'Microsoft Ayumi'],
+      en: ['Samantha', 'Google US English', 'Microsoft Zira Desktop', 'Microsoft Zira', 'Karen', 'Victoria'],
+      'zh-CN': ['Ting-Ting', 'Tingting', 'Google 普通话（中国大陆）', 'Google Chinese (Simplified)', 'Microsoft Huihui Desktop', 'Microsoft Huihui', 'Microsoft Yaoyao'],
+      zh: ['Ting-Ting', 'Tingting', 'Google 普通话（中国大陆）', 'Google Chinese (Simplified)', 'Microsoft Huihui Desktop', 'Microsoft Huihui', 'Microsoft Yaoyao'],
+      th: ['Kanya', 'Narisa', 'Google ไทย', 'Google Thai', 'Microsoft Premwadee']
+    };
+    const prefix=String(lang || '').split('-')[0].toLowerCase();
+    let voice=null;
+    for (const name of (preferredNames[lang] || preferredNames[prefix] || [])) {
+      voice=voices.find(v=>String(v.name || '').includes(name) && String(v.lang || '').toLowerCase().startsWith(prefix));
+      if (voice) break;
+    }
+    if (!voice) {
+      voice=voices.find(v=>v.lang.replace('_','-').toLowerCase()===locale.toLowerCase())
+        || voices.find(v=>v.lang.toLowerCase().startsWith(prefix));
+    }
     if (!voice) return false;
     const utterance=new SpeechSynthesisUtterance(String(text));
-    utterance.lang=locale; utterance.rate=lang==='th'?0.88:0.92; utterance.pitch=1; utterance.volume=1;
-    if (voice) utterance.voice=voice;
+    utterance.lang=locale;
+    utterance.rate=Math.min(1.2,Math.max(0.7,speechRate+0.1));
+    utterance.pitch=1.0;
+    utterance.volume=1.0;
+    utterance.voice=voice;
     utterance.onerror=()=>{};
+    if (synth.paused) synth.resume();
     synth.speak(utterance);
     return true;
   } catch(e) { return false; }
 }
 
-/* ── Burmese: local WAV for prepared phrases; Google TTS for new text ─ */
+/* ── Unified Normalized TTS Playback (WebAudio normalized first; HTMLAudio/Native fallback) ─ */
 function playGoogleTts(text, tl, useInterpreterAudio=false, preloadedSource='') {
   if (!text) return null;
   try {
+    tl = tl==='zh' ? 'zh-CN' : (tl==='ja-JP' ? 'ja' : (tl==='en-US' ? 'en' : (tl==='th-TH' ? 'th' : (tl==='my-MM' ? 'my' : tl))));
+    primeInterpreterAudioContext();
+    primeGoogleAudioPlayback();
     const preparedPath=tl==='my' ? PREBUILT_MY_AUDIO_BY_TEXT[String(text).trim()] : '';
     const directUrl=preparedPath ? new URL(preparedPath,document.baseURI).href
       : 'https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob'
         +'&tl='+encodeURIComponent(tl)+'&q='+encodeURIComponent(text);
-    // The preview/deployed app can provide /google-tts as a same-origin proxy;
-    // this avoids Chromium blocking Google's audio host while retaining direct fallback.
     const configuredApi=String(window.HEAL_TRANSLATOR_API_BASE || '').replace(/\/+$/,'');
     const proxyUrl=(!preparedPath && configuredApi)
       ? configuredApi+'/google-tts?tl='+encodeURIComponent(tl)+'&q='+encodeURIComponent(text) : '';
-    // Keep the v6 route: same-origin proxy first (works reliably on the
-    // supplied server.py), then Google's direct audio as a browser fallback.
     const url=proxyUrl || directUrl;
     const backupUrl=proxyUrl ? directUrl : (preparedPath ? ''
       : 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob'
@@ -2598,8 +2743,9 @@ function playGoogleTts(text, tl, useInterpreterAudio=false, preloadedSource='') 
     if (currentGoogleAudio && currentGoogleAudio!==audio) currentGoogleAudio.pause();
     audio.pause();
     try { audio.currentTime=0; } catch(e) {}
-    audio.setAttribute('playsinline',''); audio.preload='auto'; audio.volume=1;
-    audio.playbackRate=Math.min(2.0,Math.max(0.5,speechRate+0.1));
+    audio.setAttribute('playsinline',''); audio.preload='auto'; audio.volume=1; audio.muted=false;
+    const targetRate=Math.min(1.4,Math.max(0.65,speechRate+0.15));
+    audio.playbackRate=targetRate;
     currentGoogleAudio=audio;
     audio.addEventListener('playing',()=>{
       const notice=document.getElementById('speechNotice');
@@ -2608,25 +2754,25 @@ function playGoogleTts(text, tl, useInterpreterAudio=false, preloadedSource='') 
     },{once:true});
     let retryCount=0;
     const loadAndPlay=(source)=>{
+      audio.volume=1; audio.muted=false;
       audio.src=source; audio.load();
       audio.addEventListener('error',()=>{
         if (backupUrl && retryCount===0) { retryCount++; loadAndPlay(backupUrl); return; }
-        if (tl==='th' && playNativeFallback(text,'th')) return;
+        if (playNativeFallback(text,tl)) return;
         if (useInterpreterAudio && tl==='th') return;
         if (tl==='my' && !preparedPath && !useInterpreterAudio && playNativeMyanmarTts(text)) return;
         showSpeechNotice(`โหลดเสียง ${tl==='my'?'ภาษาเมียนมาร์':languageLabel(tl)} ไม่ได้ โปรดตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง`,audio);
       },{once:true});
       const start=()=>{
+        audio.volume=1; audio.muted=false;
         const attempt=audio.play(); audio.playPromise=attempt;
         if (attempt && attempt.catch) attempt.catch(err=>{
-          // Keep the same-origin proxy on autoplay denial; a later user tap can
-          // replay this valid audio. Do not replace it with the blocked host.
           if (err?.name==='NotAllowedError') {
             if (useInterpreterAudio) audio.dispatchEvent(new Event('interpreterplayblocked'));
             return;
           }
           if (backupUrl && retryCount===0) { retryCount++; loadAndPlay(backupUrl); return; }
-          if (tl==='th' && playNativeFallback(text,'th')) return;
+          if (playNativeFallback(text,tl)) return;
           if (useInterpreterAudio && tl==='th') return;
           if (tl==='my' && !preparedPath && !useInterpreterAudio && playNativeMyanmarTts(text)) return;
           showSpeechNotice('เล่นเสียงไม่สำเร็จ โปรดตรวจอินเทอร์เน็ตและระดับเสียง แล้วลองอีกครั้ง',audio);
@@ -2637,11 +2783,13 @@ function playGoogleTts(text, tl, useInterpreterAudio=false, preloadedSource='') 
     };
     const startPlayback=async()=>{
       if (preloadedSource) { loadAndPlay(preloadedSource); return; }
-      if (!useInterpreterAudio && !preparedPath && !configuredApi) {
-        try {
-          const result=await requestAppsScript('interpreter-tts',{tl,q:text},10000);
-          if (result?.ok && result.audio) { loadAndPlay(`data:audio/mpeg;base64,${result.audio}`); return; }
-        } catch(error) { console.warn('Apps Script audio proxy unavailable; trying direct audio.',error); }
+      const bytes=await fetchNormalizedTtsBytes(text,tl);
+      if (bytes?.byteLength) {
+        const playedNormalized=await playInterpreterAudioBuffer(bytes,text,targetRate);
+        if (playedNormalized) return;
+        const blobUrl=URL.createObjectURL(new Blob([bytes],{type:preparedPath?'audio/wav':'audio/mpeg'}));
+        loadAndPlay(blobUrl);
+        return;
       }
       loadAndPlay(url);
     };
@@ -2657,160 +2805,22 @@ function playGoogleTts(text, tl, useInterpreterAudio=false, preloadedSource='') 
 function speakText(text, lang) {
   if (!text) return;
   const synth = window.speechSynthesis;
-
-  // Stop any previous Google TTS audio and prime a gesture-unlocked media element for mobile fallback.
+  if (synth) { try { synth.cancel(); } catch(e) {} }
+  if (interpreterAudioSource) { try { interpreterAudioSource.stop(); } catch(e) {} interpreterAudioSource = null; }
   if (currentGoogleAudio) { currentGoogleAudio.pause(); try { currentGoogleAudio.currentTime=0; } catch(e) {} }
+
+  primeInterpreterAudioContext();
   primeGoogleAudioPlayback();
 
-  // Myanmar and Thai use the tested Google TTS route directly. Do not let a
-  // silent/incorrect browser voice intercept Thai output.
-  if (lang === 'my') { playGoogleTts(text,'my'); return; }
-  if (lang === 'th') { playGoogleTts(text,'th'); return; }
+  const normalizedLang = lang === 'zh' ? 'zh-CN'
+    : (lang === 'ja-JP' ? 'ja'
+    : (lang === 'en-US' ? 'en'
+    : (lang === 'th-TH' ? 'th'
+    : (lang === 'my-MM' ? 'my' : (lang || 'en')))));
 
-  // No Web Speech API — use Google TTS for en/zh/ja
-  if (!synth) {
-    const langMap2 = { 'en': 'en-US', 'zh': 'zh-CN', 'zh-CN': 'zh-CN', 'ja': 'ja', 'ja-JP': 'ja', 'th': 'th-TH', 'my': 'my-MM' };
-    playGoogleTts(text, langMap2[lang] || 'en-US');
-    return;
-  }
-
-  synth.cancel();
-
-  // Android Chrome requires a short gap after cancel() before speak()
-  setTimeout(function () {
-    const utt = new SpeechSynthesisUtterance(text);
-    const langMap = { 'th': 'th-TH', 'en': 'en-US', 'zh': 'zh-CN', 'zh-CN': 'zh-CN', 'ja': 'ja-JP', 'ja-JP': 'ja-JP', 'my': 'my-MM' };
-    const targetLang = langMap[lang] || lang || 'en-US';
-    utt.lang = targetLang;
-    utt.rate = speechRate;
-    utt.pitch = 1.0;
-    utt.volume = 1.0;
-
-    function pickVoiceAndSpeak() {
-      const voices = synth.getVoices();
-      let chosen = null;
-
-      if (targetLang === 'en-US') {
-        // Female US English — priority order (covers iOS, Android, Windows, macOS)
-        const femaleUS = [
-          'Samantha',           // macOS / iOS
-          'Google US English',  // Android Chrome
-          'Microsoft Zira Desktop', 'Microsoft Zira', // Windows
-          'Karen',              // macOS (AU accent but female & clear)
-          'Victoria', 'Moira', 'Fiona', 'Tessa'
-        ];
-        for (const name of femaleUS) {
-          chosen = voices.find(v => v.name.includes(name) && v.lang.startsWith('en'));
-          if (chosen) break;
-        }
-        if (!chosen) chosen = voices.find(v => v.lang === 'en-US' || v.lang === 'en_US');
-        if (!chosen) chosen = voices.find(v => v.lang.startsWith('en'));
-        if (chosen) utt.voice = chosen;
-        utt.onerror = () => playGoogleTts(text, 'en');
-        if (synth.paused) synth.resume();
-        synth.speak(utt);
-
-      } else if (targetLang === 'zh-CN') {
-        // Female Mandarin — priority order
-        const femaleZH = [
-          'Ting-Ting', 'Tingting',            // macOS / iOS
-          'Google 普通话（中国大陆）',            // Android Chrome (Simplified)
-          'Google Chinese (Simplified)',
-          'Microsoft Huihui Desktop', 'Microsoft Huihui', // Windows
-          'Microsoft Yaoyao',
-          'Mei-Jia', 'Li-mu', '普通话'
-        ];
-        for (const name of femaleZH) {
-          chosen = voices.find(v => v.name.includes(name));
-          if (chosen) break;
-        }
-        if (!chosen) chosen = voices.find(v => v.lang === 'zh-CN' || v.lang === 'zh_CN');
-        if (!chosen) chosen = voices.find(v => v.lang.startsWith('zh'));
-
-        if (chosen) {
-          utt.voice = chosen;
-          utt.onerror = () => playGoogleTts(text, 'zh-CN');
-          if (synth.paused) synth.resume();
-          synth.speak(utt);
-        } else {
-          // No Chinese voice on this device — fall back to Google TTS Audio
-          playGoogleTts(text, 'zh-CN');
-        }
-
-      } else if (targetLang === 'ja-JP') {
-        // Female Japanese — priority order (covers iOS, Android, Windows, macOS)
-        const femaleJA = [
-          'Kyoko', 'O-Ren',                   // macOS / iOS
-          'Google 日本語', 'Google Japanese',   // Android / Chrome
-          'Microsoft Nanami',                 // Windows / Edge neural
-          'Microsoft Haruka Desktop', 'Microsoft Haruka', // Windows
-          'Microsoft Ayumi', 'Microsoft Sayaka',
-          '日本語'
-        ];
-        for (const name of femaleJA) {
-          chosen = voices.find(v => v.name.includes(name) && /^ja([-_]|$)/i.test(v.lang));
-          if (chosen) break;
-        }
-        if (!chosen) {
-          for (const name of femaleJA) {
-            chosen = voices.find(v => v.name.includes(name));
-            if (chosen) break;
-          }
-        }
-        if (!chosen) chosen = voices.find(v => v.lang === 'ja-JP' || v.lang === 'ja_JP');
-        if (!chosen) chosen = voices.find(v => /^ja([-_]|$)/i.test(v.lang));
-
-        if (chosen) {
-          utt.voice = chosen;
-          utt.onerror = () => playGoogleTts(text, 'ja');
-          if (synth.paused) synth.resume();
-          synth.speak(utt);
-        } else {
-          // No Japanese voice on this device — fall back to Google TTS Audio
-          playGoogleTts(text, 'ja');
-        }
-
-      } else {
-        chosen = voices.find(v => v.lang.replace('_', '-') === targetLang);
-        if (!chosen) chosen = voices.find(v => v.lang.startsWith(targetLang.split('-')[0]));
-        if (!chosen && targetLang === 'my-MM') { playGoogleTts(text, 'my'); return; }
-        if (!chosen && targetLang === 'th-TH') { playGoogleTts(text, 'th'); return; }
-        if (!chosen && targetLang === 'ja-JP') { playGoogleTts(text, 'ja'); return; }
-        if (chosen) utt.voice = chosen;
-        if (synth.paused) synth.resume();
-        synth.speak(utt);
-      }
-    }
-
-    const voices = synth.getVoices();
-    if (voices.length > 0) {
-      pickVoiceAndSpeak();
-    } else {
-      // Voices not yet loaded — wait for voiceschanged event
-      let done = false;
-      const onVC = function () {
-        if (done) return;
-        done = true;
-        synth.removeEventListener('voiceschanged', onVC);
-        pickVoiceAndSpeak();
-      };
-      synth.addEventListener('voiceschanged', onVC);
-      // Safety fallback: if voices never fire, try Google TTS for zh/ja
-      setTimeout(function () {
-        if (!done) {
-          done = true;
-          synth.removeEventListener('voiceschanged', onVC);
-          if (targetLang === 'zh-CN') {
-            playGoogleTts(text, 'zh-CN');
-          } else if (targetLang === 'ja-JP') {
-            playGoogleTts(text, 'ja');
-          } else {
-            pickVoiceAndSpeak();
-          }
-        }
-      }, 600);
-    }
-  }, 80); // 80 ms gap lets Android finish the cancel()
+  // Route all languages through the normalized + compressed WebAudio TTS pipeline
+  // so every language plays at a consistent, loud volume (with automatic native voice fallback).
+  playGoogleTts(text, normalizedLang);
 }
 
 /* ── Room selection and usage analytics ───────────────────── */
@@ -3079,6 +3089,7 @@ function startInterpreterRecognition() {
       }
     };
     rec.onend = () => {
+      lastRecognitionEndTime = Date.now();
       if (sessionToken!==interpreterSessionToken) return;
       clearInterpreterRecognitionWatchdogs();
       if (interpreterRecognition===rec) interpreterRecognition=null;
@@ -3174,7 +3185,7 @@ function startInterpreterRecognition() {
   } finally {
     if (sessionToken === interpreterSessionToken) {
       interpreterBusy = false; updateInterpreterTurn();
-      if (interpreterActive) scheduleInterpreterRecognition(100);
+      if (interpreterActive) scheduleInterpreterRecognition(380);
     }
   }
 }
@@ -3222,7 +3233,7 @@ async function playInterpreterTtsMedia(text,lang,shouldContinue=()=>true) {
     previous.pause();
   }
   try { audio.pause(); audio.currentTime=0; } catch(e) {}
-  audio.setAttribute('playsinline',''); audio.preload='auto'; audio.volume=1; audio.src=source;
+  audio.setAttribute('playsinline',''); audio.preload='auto'; audio.volume=1; audio.muted=false; audio.playbackRate=0.96; audio.src=source;
   currentGoogleAudio=audio;
   const isObjectUrl=source.startsWith('blob:');
   return new Promise(resolve=>{
@@ -3254,6 +3265,8 @@ async function playInterpreterTtsMedia(text,lang,shouldContinue=()=>true) {
     const start=()=>{
       if (playRequested || settled || !shouldContinue()) return;
       playRequested=true;
+      audio.volume=1;
+      audio.muted=false;
       try {
         const attempt=audio.play();
         if (attempt && typeof attempt.catch==='function') attempt.catch(()=>finish(false));
@@ -3277,69 +3290,19 @@ async function playInterpreterTtsMedia(text,lang,shouldContinue=()=>true) {
 async function speakInterpreterGoogleChunk(text, lang, shouldContinue=()=>true) {
   if (!text) return false;
   if (!shouldContinue()) return false;
-  const configuredApi=String(window.HEAL_TRANSLATOR_API_BASE || '').replace(/\/+$/,'');
-  const cacheKey=`${lang}\u0000${text}`;
-  let cachedAudio=interpreterTtsMemory.get(cacheKey) || null;
-  let directTried=false;
-  if (cachedAudio?.kind==='bytes' && interpreterAudioContext) {
-    const played=await playInterpreterAudioBuffer(cachedAudio.bytes,text);
+  // Always prioritize normalized + compressed Web Audio playback so every language
+  // and every phrase plays at the exact same loud, leveled volume.
+  const bytes=await fetchNormalizedTtsBytes(text,lang);
+  if (!shouldContinue()) return false;
+  if (bytes?.byteLength) {
+    const played=await playInterpreterAudioBuffer(bytes,text,0.96);
     if (played) return true;
-  }
-  if (!cachedAudio && configuredApi && interpreterAudioContext) {
-    const decoded=await playInterpreterDecodedAudio(text,lang);
-    if (decoded) return true;
-  }
-  if (!cachedAudio && !configuredApi) {
-    directTried=true;
-    if (await playInterpreterTtsMedia(text,lang,shouldContinue)) return true;
+    if (!shouldContinue()) return false;
+    const blobUrl=URL.createObjectURL(new Blob([bytes],{type:'audio/mpeg'}));
+    if (await playInterpreterAudioElement(blobUrl,text,shouldContinue)) return true;
   }
   if (!shouldContinue()) return false;
-  if (!cachedAudio) {
-    if (configuredApi) {
-      const controller=new AbortController();
-      const timeout=setTimeout(()=>controller.abort(),2400);
-      try {
-        const response=await fetch(configuredApi+'/google-tts?tl='+encodeURIComponent(lang)+'&q='+encodeURIComponent(text),{cache:'no-store',signal:controller.signal});
-        if (!response.ok) throw new Error(`TTS proxy HTTP ${response.status}`);
-        const bytes=await response.arrayBuffer();
-        if (!bytes.byteLength) throw new Error('Empty speech response');
-        cachedAudio={kind:'blob',blob:new Blob([bytes],{type:'audio/mpeg'})};
-      } catch(e) {
-        cachedAudio=null;
-      } finally { clearTimeout(timeout); }
-    }
-    if (!cachedAudio && shouldContinue()) {
-      try {
-        // Apps Script can take several seconds on mobile networks or when its
-        // Google TTS request is cold. The old 3.2s cutoff discarded valid
-        // Burmese/Thai audio before the JSONP response arrived.
-        const result=await requestAppsScript('interpreter-tts',{tl:lang,q:text},9000);
-        if (!result?.ok || !result.audio) throw new Error(result?.error || 'TTS proxy unavailable');
-        const binary=atob(result.audio);
-        const bytes=new Uint8Array(binary.length);
-        for (let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
-        cachedAudio={kind:'bytes',bytes:bytes.buffer};
-        if (interpreterAudioContext) {
-          const played=await playInterpreterAudioBuffer(cachedAudio.bytes,text);
-          if (played) {
-            interpreterTtsMemory.set(cacheKey,cachedAudio);
-            if (interpreterTtsMemory.size>80) interpreterTtsMemory.delete(interpreterTtsMemory.keys().next().value);
-            return true;
-          }
-        }
-      } catch(e) { cachedAudio=null; }
-    }
-    if (cachedAudio) {
-      interpreterTtsMemory.set(cacheKey,cachedAudio);
-      if (interpreterTtsMemory.size>80) interpreterTtsMemory.delete(interpreterTtsMemory.keys().next().value);
-    }
-  }
-  if (!shouldContinue()) return false;
-  let source=cachedAudio?.kind==='blob' ? URL.createObjectURL(cachedAudio.blob)
-    : cachedAudio?.kind==='bytes' ? URL.createObjectURL(new Blob([cachedAudio.bytes],{type:'audio/mpeg'}))
-    : cachedAudio?.url || '';
-  if (source && await playInterpreterAudioElement(source,text,shouldContinue)) return true;
-  if (!directTried && await playInterpreterTtsMedia(text,lang,shouldContinue)) return true;
+  if (await playInterpreterTtsMedia(text,lang,shouldContinue)) return true;
   return false;
 }
 function speakInterpreterNativeChunk(text, lang, locale, voice, shouldContinue=()=>true) {
@@ -3363,7 +3326,7 @@ function speakInterpreterNativeChunk(text, lang, locale, voice, shouldContinue=(
       speakInterpreterGoogleChunk(text,lang,shouldContinue).then(resolve,()=>resolve(false));
     };
     const utterance=new SpeechSynthesisUtterance(text);
-    utterance.lang=locale; utterance.rate=0.9; utterance.voice=voice;
+    utterance.lang=locale; utterance.rate=0.92; utterance.pitch=1.0; utterance.volume=1.0; utterance.voice=voice;
     utterance.onstart=()=>{
       if (startTimer) { clearTimeout(startTimer); startTimer=null; }
       watchdog=setTimeout(fallback,interpreterSpeechWatchdog(text));
@@ -3412,20 +3375,35 @@ async function interpreterSpeak(text, lang, allowWhenStopped=false) {
   if (!chunks.length) return false;
   const speechSessionToken=interpreterSessionToken;
   const shouldContinue=()=>speechSessionToken===interpreterSessionToken && (interpreterActive || allowWhenStopped);
+  primeInterpreterAudioContext();
+  primeGoogleAudioPlayback();
+  await waitForMicReleaseBeforeSpeaking();
+  if (!shouldContinue()) return false;
+  if (interpreterAudioSource) {
+    try { interpreterAudioSource.stop(); } catch(e) {}
+    interpreterAudioSource=null;
+  }
+  if (currentGoogleAudio) {
+    try {
+      if (currentGoogleAudio._interpreterFinish) currentGoogleAudio._interpreterFinish(false);
+      currentGoogleAudio.pause();
+    } catch(e) {}
+  }
   const synth=window.speechSynthesis;
   if (synth) { try { synth.cancel(); } catch(e) {} }
+  // Pre-fetch normalized audio buffers for all chunks in parallel
+  chunks.forEach(c=>{ fetchNormalizedTtsBytes(c,lang).catch(()=>null); });
   let allPlayed=true;
   for (const chunk of chunks) {
     if (!shouldContinue()) return false;
-    let played=false;
-    // Start a matching on-device voice first for low-latency playback. If it
-    // is unavailable or fails to start promptly, fall back to Google TTS.
-    if (synth) {
+    // Route every chunk through the normalized + compressed Web Audio pipeline first
+    // so volume stays consistently loud across all languages and turns.
+    let played=await speakInterpreterGoogleChunk(chunk,lang,shouldContinue);
+    if (!played && synth && shouldContinue()) {
       const locale=speechLocale(lang);
       const voice=await getInterpreterVoice(synth,lang,locale);
       if (voice && shouldContinue()) played=await speakInterpreterNativeChunk(chunk,lang,locale,voice,shouldContinue);
     }
-    if (!played && shouldContinue()) played=await speakInterpreterGoogleChunk(chunk,lang,shouldContinue);
     if (!shouldContinue()) return false;
     if (!played) allPlayed=false;
   }
