@@ -8,6 +8,7 @@
 const STORAGE_KEY = 'heal_english_v6';
 const MULTILINGUAL_MIGRATION_KEY = 'heal_multilingual_seed_audited_v1';
 const CHINESE_THAI_PHONETIC_MIGRATION_KEY = 'heal_chinese_thai_phonetic_v4';
+const JAPANESE_SEED_MIGRATION_KEY = 'heal_japanese_seed_audited_v1';
 const GOOGLE_SHEETS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzCrVlO44Ryl0KjdOM1ToZGERUaqYfzcrzWICtX6R3z3-73vrTjcloJFS-Nko7Og-f6/exec';
 /* ═══ DEPARTMENTS ════════════════════════════════════════════ */
 const DEPT_GROUPS = [
@@ -32,77 +33,80 @@ const defaultScenarios = [
   {
     id: 'greeting', labelEn: 'Greeting', labelTh: 'การทักทาย', icon: '👋',
     phrases: [
-      { id:'g1', en:'Hello, welcome to our hospital.', th:'สวัสดีค่ะ ยินดีต้อนรับสู่โรงพยาบาลค่ะ', zh:'您好，欢迎来到我们医院。', phonetic_en:'เฮลโล เวลคัม ทู เอาเออร์ ฮอสพิเทิล', phonetic_zh:'หนีห่าว ฮวนอิ๋ง ไหล เต้า หว่อ เหมิน อี้ย่วน', context:'First contact with patient at entrance or reception', contextTh:'ใช้เมื่อต้อนรับผู้ป่วยที่ทางเข้าหรือเคาน์เตอร์' },
-      { id:'g2', en:'How can I help you today?', th:'วันนี้มีอะไรให้ช่วยไหมคะ?', zh:'我今天能帮您什么？', phonetic_en:'เฮา แคน ไอ เฮลป์ ยู ทูเดย์', phonetic_zh:'หว่อ จินเทียน เหนิง ปาง หนิน เสินเมอะ', context:'Opening a patient encounter', contextTh:'ใช้เปิดการสนทนาเพื่อสอบถามความต้องการ' },
-      { id:'g3', en:'Please wait here for a moment.', th:'กรุณารอสักครู่ตรงนี้ค่ะ', zh:'请在这里稍等片刻。', phonetic_en:'พลีส เวท เฮียร์ ฟอร์ อะ โมเมินท์', phonetic_zh:'ฉิ่ง จ้าย เจ้อ หลี่ เซาเติ่ง เพี่ยนเค่อ', context:'Asking patient to wait', contextTh:'ใช้ขอให้ผู้ป่วยรอ' },
-      { id:'g4', en:'Good morning! How are you feeling today?', th:'สวัสดีตอนเช้าค่ะ วันนี้รู้สึกเป็นอย่างไรบ้างคะ?', zh:'早上好！今天感觉怎么样？', phonetic_en:'กุด มอร์นิ่ง เฮา อาร์ ยู ฟีลิ่ง ทูเดย์', phonetic_zh:'จ้าวซ่างห่าว จินเทียน กั่นเจวี๋ย เจิ่นเมอะย่าง', context:'Morning greeting when visiting a patient', contextTh:'ใช้ทักทายตอนเช้าในหอผู้ป่วย' },
-      { id:'g5', en:'Are you here for a check-up?', th:'คุณมาตรวจสุขภาพไหมคะ?', zh:'您是来体检的吗？', phonetic_en:'อาร์ ยู เฮียร์ ฟอร์ อะ เช็คอัพ', phonetic_zh:'หนิน ซื่อ ไหล ถี่เจี่ยน เตอ มะ', context:'Confirming purpose of visit', contextTh:'ใช้ยืนยันวัตถุประสงค์การมาโรงพยาบาล' },
-      { id:'g6', en:'Sorry for the delay.', th:'ขอโทษที่ต้องรอนานนะคะ', zh:'抱歉让您久等了。', phonetic_en:'ซอร์รี่ ฟอร์ เดอะ ดีเลย์', phonetic_zh:'เป้าเชี่ยน ร่าง หนิน จิ่ว เติ่ง เลอะ', context:'Apologizing for wait time', contextTh:'ใช้ขอโทษที่ต้องรอนาน' },
-      { id:'g7', en:'Please follow me.', th:'กรุณาตามมาด้วยค่ะ', zh:'请跟我来。', phonetic_en:'พลีส ฟอลโล มี', phonetic_zh:'ฉิ่ง เกิน หว่อ ไหล', context:'Leading patient to a room', contextTh:'ใช้นำผู้ป่วยไปยังห้องตรวจ' },
-      { id:'g8', en:'Have you checked your blood pressure, weight and height?', th:'คุณวัดความดันโลหิต ชั่งน้ำหนัก วัดส่วนสูงหรือยังคะ?', zh:'您量过血压、体重和身高了吗？', phonetic_en:'แฮฟ ยู เช็กต์ ยอร์ บลัด เพรชเชอร์ เวท แอนด์ ไฮท์', phonetic_zh:'หนิน เหลียง กั้ว เสวี่ยยา ถี่จ้ง เหอ เซินเกา เลอะ มะ', context:'Confirming vital sign pre-checks', contextTh:'ใช้ยืนยันการตรวจสัญญาณชีพ' }
+      { id:'g1', en:'Hello, welcome to our hospital.', th:'สวัสดีค่ะ ยินดีต้อนรับสู่โรงพยาบาลค่ะ', zh:'您好，欢迎来到我们医院。', ja:'こんにちは、当院へようこそ。', phonetic_en:'เฮลโล เวลคัม ทู เอาเออร์ ฮอสพิเทิล', phonetic_zh:'หนีห่าว ฮวนอิ๋ง ไหล เต้า หว่อ เหมิน อี้ย่วน', phonetic_ja:'คนนิจิวะ โทอิง เอะ โยโคโซะ', context:'First contact with patient at entrance or reception', contextTh:'ใช้เมื่อต้อนรับผู้ป่วยที่ทางเข้าหรือเคาน์เตอร์' },
+      { id:'g2', en:'How can I help you today?', th:'วันนี้มีอะไรให้ช่วยไหมคะ?', zh:'我今天能帮您什么？', ja:'本日はどのようなご用件でしょうか？', phonetic_en:'เฮา แคน ไอ เฮลป์ ยู ทูเดย์', phonetic_zh:'หว่อ จินเทียน เหนิง ปาง หนิน เสินเมอะ', phonetic_ja:'ฮนจิตสึ วะ โดโนะโยนะ โกะโยเคน เดโช กะ', context:'Opening a patient encounter', contextTh:'ใช้เปิดการสนทนาเพื่อสอบถามความต้องการ' },
+      { id:'g3', en:'Please wait here for a moment.', th:'กรุณารอสักครู่ตรงนี้ค่ะ', zh:'请在这里稍等片刻。', ja:'こちらで少々お待ちください。', phonetic_en:'พลีส เวท เฮียร์ ฟอร์ อะ โมเมินท์', phonetic_zh:'ฉิ่ง จ้าย เจ้อ หลี่ เซาเติ่ง เพี่ยนเค่อ', phonetic_ja:'โคจิระ เดะ โชโช โอะมาจิ คุดาไซ', context:'Asking patient to wait', contextTh:'ใช้ขอให้ผู้ป่วยรอ' },
+      { id:'g4', en:'Good morning! How are you feeling today?', th:'สวัสดีตอนเช้าค่ะ วันนี้รู้สึกเป็นอย่างไรบ้างคะ?', zh:'早上好！今天感觉怎么样？', ja:'おはようございます。今日の体調はいかがですか？', phonetic_en:'กุด มอร์นิ่ง เฮา อาร์ ยู ฟีลิ่ง ทูเดย์', phonetic_zh:'จ้าวซ่างห่าว จินเทียน กั่นเจวี๋ย เจิ่นเมอะย่าง', phonetic_ja:'โอะฮาโย โกะไซมัส เคียว โนะ ไทโจ วะ อิคากะ เดส กะ', context:'Morning greeting when visiting a patient', contextTh:'ใช้ทักทายตอนเช้าในหอผู้ป่วย' },
+      { id:'g5', en:'Are you here for a check-up?', th:'คุณมาตรวจสุขภาพไหมคะ?', zh:'您是来体检的吗？', ja:'本日は健康診断でいらっしゃいましたか？', phonetic_en:'อาร์ ยู เฮียร์ ฟอร์ อะ เช็คอัพ', phonetic_zh:'หนิน ซื่อ ไหล ถี่เจี่ยน เตอ มะ', phonetic_ja:'ฮนจิตสึ วะ เคนโคชินดัน เดะ อิรัชไชมะชิตะ กะ', context:'Confirming purpose of visit', contextTh:'ใช้ยืนยันวัตถุประสงค์การมาโรงพยาบาล' },
+      { id:'g6', en:'Sorry for the delay.', th:'ขอโทษที่ต้องรอนานนะคะ', zh:'抱歉让您久等了。', ja:'お待たせして申し訳ございません。', phonetic_en:'ซอร์รี่ ฟอร์ เดอะ ดีเลย์', phonetic_zh:'เป้าเชี่ยน ร่าง หนิน จิ่ว เติ่ง เลอะ', phonetic_ja:'โอะมาตาเสะ ชิเตะ โมชิวาเกะ โกะไซมาเซน', context:'Apologizing for wait time', contextTh:'ใช้ขอโทษที่ต้องรอนาน' },
+      { id:'g7', en:'Please follow me.', th:'กรุณาตามมาด้วยค่ะ', zh:'请跟我来。', ja:'どうぞこちらへお越しください。', phonetic_en:'พลีส ฟอลโล มี', phonetic_zh:'ฉิ่ง เกิน หว่อ ไหล', phonetic_ja:'โดโซะ โคจิระ เอะ โอะโคชิ คุดาไซ', context:'Leading patient to a room', contextTh:'ใช้นำผู้ป่วยไปยังห้องตรวจ' },
+      { id:'g8', en:'Have you checked your blood pressure, weight and height?', th:'คุณวัดความดันโลหิต ชั่งน้ำหนัก วัดส่วนสูงหรือยังคะ?', zh:'您量过血压、体重和身高了吗？', ja:'血圧、体重、身長はもう測りましたか？', phonetic_en:'แฮฟ ยู เช็กต์ ยอร์ บลัด เพรชเชอร์ เวท แอนด์ ไฮท์', phonetic_zh:'หนิน เหลียง กั้ว เสวี่ยยา ถี่จ้ง เหอ เซินเกา เลอะ มะ', phonetic_ja:'เค็ตสึอัตสึ ไทจู ชินโจ วะ โม ฮาคาริมะชิตะ กะ', context:'Confirming vital sign pre-checks', contextTh:'ใช้ยืนยันการตรวจสัญญาณชีพ' }
     ]
   },
   {
     id: 'registration', labelEn: 'Registration', labelTh: 'การลงทะเบียน', icon: '📋',
     phrases: [
-      { id:'r1', en:'May I have your full name, please?', th:'ขอทราบชื่อ-นามสกุลด้วยค่ะ', zh:'请问您的全名是什么？', phonetic_en:'เมย์ ไอ แฮฟ ยอร์ ฟูล เนม พลีส', phonetic_zh:'ฉิ่งเวิ่น หนิน เตอ เฉวียนหมิง ซื่อ เสินเมอะ', context:'Collecting patient identity at registration', contextTh:'ใช้เก็บข้อมูลตัวตนผู้ป่วย' },
-      { id:'r2', en:'Do you have an appointment today?', th:'ได้นัดไว้หรือเปล่าคะ?', zh:'您今天有预约吗？', phonetic_en:'ดู ยู แฮฟ แอน อะพอยต์เมินท์ ทูเดย์', phonetic_zh:'หนิน จินเทียน โหย่ว อวี้เยวีย มะ', context:'Checking prior appointment', contextTh:'ใช้ตรวจสอบว่ามีนัดล่วงหน้าหรือไม่' },
-      { id:'r3', en:'Please fill in this form.', th:'กรุณากรอกแบบฟอร์มนี้ด้วยค่ะ', zh:'请填写这张表格。', phonetic_en:'พลีส ฟิล อิน ดิส ฟอร์ม', phonetic_zh:'ฉิ่ง เถียนเสี่ย เจ้อ จาง เปี่ยวเก๋อ', context:'Handing patient registration form', contextTh:'ใช้ขณะมอบแบบฟอร์มลงทะเบียน' },
-      { id:'r4', en:'Can I see your passport or ID card?', th:'ขอดูหนังสือเดินทางหรือบัตรประชาชนได้ไหมคะ?', zh:'我可以看一下您的护照或身份证吗？', phonetic_en:'แคน ไอ ซี ยอร์ พาสปอร์ท ออร์ ไอดี การ์ด', phonetic_zh:'หว่อ เขออี่ คั่น อี๋เซี่ย หนิน เตอ ฮู่จ้าว ฮั่ว เซินเฟิ่นเจิ้ง มะ', context:'Verifying identity of foreign patients', contextTh:'ใช้ยืนยันตัวตนผู้ป่วยต่างชาติ' },
-      { id:'r5', en:'Please take a seat.', th:'กรุณานั่งรอได้เลยค่ะ', zh:'请坐下稍等。', phonetic_en:'พลีส เทค อะ ซีท', phonetic_zh:'ฉิ่ง จั้ว เซี่ย เชา เติ่ง', context:'Asking patient to sit and wait', contextTh:'ใช้ขอให้ผู้ป่วยนั่งรอ' },
-      { id:'r6', en:'The nurse will call you soon.', th:'พยาบาลจะเรียกคุณในอีกไม่นานค่ะ', zh:'护士很快就会叫您。', phonetic_en:'เดอะ เนิร์ส วิล คอล ยู ซูน', phonetic_zh:'ฮู่ซือ เหิ่น ไคว้ จิ้ว ฮุ่ย เจี้ยว หนิน เลอ', context:'Reassuring patient their turn is coming', contextTh:'ใช้ให้ผู้ป่วยมั่นใจว่าจะได้รับการเรียก' },
-      { id:'r7', en:'The screen will show your queue number.', th:'หน้าจอจะแสดงหมายเลขคิวของคุณค่ะ', zh:'屏幕上会显示您的排队号码。', phonetic_en:'เดอะ สกรีน วิล โชว์ ยอร์ คิว นัมเบอร์', phonetic_zh:'ผิงมู่ ซ่าง ฮุ่ย เสี่ยนซื่อ หนิน เตอ ไผตุ้ย ห้าวหม่า', context:'Directing patient to watch the queue screen', contextTh:'ใช้บอกให้ผู้ป่วยดูหน้าจอแสดงคิว' },
-      { id:'r8', en:'The doctor will see you shortly.', th:'คุณหมอจะพบคุณในอีกสักครู่ค่ะ', zh:'医生很快就会见您。', phonetic_en:'เดอะ ด็อกเตอร์ วิล ซี ยู ชอร์ทลี', phonetic_zh:'อี้เซิง เหิ่น ไคว่ จิ้ว ฮุ่ย เจี้ยน หนิน', context:'Informing patient doctor will be with them soon', contextTh:'ใช้แจ้งว่าแพทย์จะพบในไม่ช้า' },
-      { id:'r9', en:'Could you repeat that, please?', th:'ช่วยพูดซ้ำอีกครั้งได้ไหมคะ?', zh:'请您再说一遍好吗？', phonetic_en:'คุด ยู รีพีท แดท พลีส', phonetic_zh:'ฉิ่ง หนิน จ้าย ซัว อี๋เปี้ยน ห่าว มะ', context:'Asking patient to repeat', contextTh:'ใช้ขอให้ผู้ป่วยพูดซ้ำ' },
-      { id:'r10', en:'What is your phone number?', th:'เบอร์โทรศัพท์ของคุณคือเบอร์อะไรคะ?', zh:'您的电话号码是多少？', phonetic_en:'วอท อิซ ยอร์ โฟน นัมเบอร์', phonetic_zh:'หนิน เตอะ เตี้ยนฮว่า ห้าวหม่า ซื่อ ตัวเส่า', context:'Collecting contact number', contextTh:'ใช้เก็บเบอร์โทรในระเบียนผู้ป่วย' },
-      { id:'r11', en:'When did the symptoms start?', th:'อาการเริ่มต้นเมื่อไหร่คะ?', zh:'症状是什么时候开始的？', phonetic_en:'เวน ดิด เดอะ ซิมทัมส์ สตาร์ท', phonetic_zh:'เจิ้งจ้วง ซื่อ เสินเมอะสือโฮ่ว ไคสื่อ เตอ', context:'Asking onset of symptoms', contextTh:'ใช้สอบถามจุดเริ่มต้นของอาการ' },
-      { id:'r12', en:'Where does it hurt?', th:'เจ็บที่ไหนคะ?', zh:'哪里疼？', phonetic_en:'แวร์ ดัซ อิท เฮิร์ท', phonetic_zh:'หนาหลี่ เถิง', context:'Locating area of pain', contextTh:'ใช้ระบุตำแหน่งที่เจ็บปวด' },
-      { id:'r13', en:'How severe is the pain? On a scale of 1 to 10.', th:'ปวดมากแค่ไหนคะ? จากคะแนน 1 ถึง 10', zh:'疼痛有多严重？从1到10分。', phonetic_en:'เฮา ซีเวียร์ อิซ เดอะ เปน ออน อะ สเกล ออฟ วัน ทู เทน', phonetic_zh:'เถิงท่ง โหย่ว ตัว หยานจ้ง ฉง อี เต้า สือ เฟิน', context:'Assessing pain intensity', contextTh:'ใช้วัดระดับความเจ็บปวด' },
-      { id:'r14', en:'Do you have a fever?', th:'คุณมีไข้ไหมคะ?', zh:'您发烧吗？', phonetic_en:'ดู ยู แฮฟ อะ ฟีเวอร์', phonetic_zh:'หนิน ฟาเชา มะ', context:'Checking for fever', contextTh:'ใช้ตรวจสอบอาการมีไข้' },
-      { id:'r15', en:'Are you currently taking any medication?', th:'ตอนนี้คุณกำลังทานยาอะไรอยู่ไหมคะ?', zh:'您目前在服用任何药物吗？', phonetic_en:'อาร์ ยู เคอร์เรินท์ลี เทคคิ่ง เอนี เมดิเคชัน', phonetic_zh:'หนิน มู่เฉียน จ้าย ฝูย่ง เริ่นเหอ เย่าอู้ มะ', context:'Checking current medications', contextTh:'ใช้ตรวจสอบยาที่ผู้ป่วยทานอยู่' },
-      { id:'r16', en:'Do you have any chronic diseases?', th:'คุณมีโรคประจำตัวไหมคะ?', zh:'您有任何慢性病吗？', phonetic_en:'ดู ยู แฮฟ เอนี โครนิก ดิซีซิส', phonetic_zh:'หนิน โหย่ว เริ่นเหอ ม่านซิ่งปิ้ง มะ', context:'Screening for chronic conditions', contextTh:'ใช้คัดกรองโรคประจำตัว' },
-      { id:'r19', en:'Please sign here.', th:'กรุณาเซ็นชื่อตรงนี้ด้วยค่ะ', zh:'请在这里签名。', phonetic_en:'พลีส ไซน์ เฮียร์', phonetic_zh:'ฉิ่ง จ้าย เจ้อ หลี่ เชียนหมิง', context:'Requesting patient signature', contextTh:'ใช้ขอลายเซ็นผู้ป่วย' },
-      { id:'r20', en:'We need to check your vital signs first.', th:'เราต้องตรวจสัญญาณชีพก่อนนะคะ', zh:'我们需要先检查您的生命体征。', phonetic_en:'วี นีด ทู เช็ก ยอร์ ไวทัล ไซน์ส เฟิร์สท์', phonetic_zh:'หว่อเหมิน ซูเย่า เซียน เจี่ยนฉา หนิน เตอ เซิงมิ่ง ถี่เจิง', context:'Informing about vital sign check', contextTh:'ใช้แจ้งว่าต้องตรวจสัญญาณชีพก่อน' }
+      { id:'r1', en:'May I have your full name, please?', th:'ขอทราบชื่อ-นามสกุลด้วยค่ะ', zh:'请问您的全名是什么？', ja:'お名前をフルネームで教えていただけますか？', phonetic_en:'เมย์ ไอ แฮฟ ยอร์ ฟูล เนม พลีส', phonetic_zh:'ฉิ่งเวิ่น หนิน เตอ เฉวียนหมิง ซื่อ เสินเมอะ', phonetic_ja:'โอะนามาเอะ โอะ ฟุรุเนมุ เดะ โอะชิเอเตะ อิตาดาเคมัส กะ', context:'Collecting patient identity at registration', contextTh:'ใช้เก็บข้อมูลตัวตนผู้ป่วย' },
+      { id:'r2', en:'Do you have an appointment today?', th:'ได้นัดไว้หรือเปล่าคะ?', zh:'您今天有预约吗？', ja:'本日のご予約はありますか？', phonetic_en:'ดู ยู แฮฟ แอน อะพอยต์เมินท์ ทูเดย์', phonetic_zh:'หนิน จินเทียน โหย่ว อวี้เยวีย มะ', phonetic_ja:'ฮนจิตสึ โนะ โกะโยยะคุ วะ อาริมัส กะ', context:'Checking prior appointment', contextTh:'ใช้ตรวจสอบว่ามีนัดล่วงหน้าหรือไม่' },
+      { id:'r3', en:'Please fill in this form.', th:'กรุณากรอกแบบฟอร์มนี้ด้วยค่ะ', zh:'请填写这张表格。', ja:'こちらの用紙にご記入ください。', phonetic_en:'พลีส ฟิล อิน ดิส ฟอร์ม', phonetic_zh:'ฉิ่ง เถียนเสี่ย เจ้อ จาง เปี่ยวเก๋อ', phonetic_ja:'โคจิระ โนะ โยชิ นิ โกะคินิว คุดาไซ', context:'Handing patient registration form', contextTh:'ใช้ขณะมอบแบบฟอร์มลงทะเบียน' },
+      { id:'r4', en:'Can I see your passport or ID card?', th:'ขอดูหนังสือเดินทางหรือบัตรประชาชนได้ไหมคะ?', zh:'我可以看一下您的护照或身份证吗？', ja:'パスポートまたは身分証明書を見せていただけますか？', phonetic_en:'แคน ไอ ซี ยอร์ พาสปอร์ท ออร์ ไอดี การ์ด', phonetic_zh:'หว่อ เขออี่ คั่น อี๋เซี่ย หนิน เตอ ฮู่จ้าว ฮั่ว เซินเฟิ่นเจิ้ง มะ', phonetic_ja:'พาสึโปโตะ มาตะวะ มิบุนโชเมโชะ โอะ มิเซเตะ อิตาดาเคมัส กะ', context:'Verifying identity of foreign patients', contextTh:'ใช้ยืนยันตัวตนผู้ป่วยต่างชาติ' },
+      { id:'r5', en:'Please take a seat.', th:'กรุณานั่งรอได้เลยค่ะ', zh:'请坐下稍等。', ja:'お掛けになってお待ちください。', phonetic_en:'พลีส เทค อะ ซีท', phonetic_zh:'ฉิ่ง จั้ว เซี่ย เชา เติ่ง', phonetic_ja:'โอะคาเกะ นิ นัตเตะ โอะมาจิ คุดาไซ', context:'Asking patient to sit and wait', contextTh:'ใช้ขอให้ผู้ป่วยนั่งรอ' },
+      { id:'r6', en:'The nurse will call you soon.', th:'พยาบาลจะเรียกคุณในอีกไม่นานค่ะ', zh:'护士很快就会叫您。', ja:'まもなく看護師がお呼びします。', phonetic_en:'เดอะ เนิร์ส วิล คอล ยู ซูน', phonetic_zh:'ฮู่ซือ เหิ่น ไคว้ จิ้ว ฮุ่ย เจี้ยว หนิน เลอ', phonetic_ja:'มาโมนาคุ คังโกะชิ กะ โอะโยบิ ชิมัส', context:'Reassuring patient their turn is coming', contextTh:'ใช้ให้ผู้ป่วยมั่นใจว่าจะได้รับการเรียก' },
+      { id:'r7', en:'The screen will show your queue number.', th:'หน้าจอจะแสดงหมายเลขคิวของคุณค่ะ', zh:'屏幕上会显示您的排队号码。', ja:'画面に受付番号が表示されます。', phonetic_en:'เดอะ สกรีน วิล โชว์ ยอร์ คิว นัมเบอร์', phonetic_zh:'ผิงมู่ ซ่าง ฮุ่ย เสี่ยนซื่อ หนิน เตอ ไผตุ้ย ห้าวหม่า', phonetic_ja:'กาเมน นิ อุเค็ตสึเกะ บังโก กะ เฮียวจิ ซาเรมัส', context:'Directing patient to watch the queue screen', contextTh:'ใช้บอกให้ผู้ป่วยดูหน้าจอแสดงคิว' },
+      { id:'r8', en:'The doctor will see you shortly.', th:'คุณหมอจะพบคุณในอีกสักครู่ค่ะ', zh:'医生很快就会见您。', ja:'まもなく医師が診察いたします。', phonetic_en:'เดอะ ด็อกเตอร์ วิล ซี ยู ชอร์ทลี', phonetic_zh:'อี้เซิง เหิ่น ไคว่ จิ้ว ฮุ่ย เจี้ยน หนิน', phonetic_ja:'มาโมนาคุ อิชะ กะ ชินซัตสึ อิตาชิมัส', context:'Informing patient doctor will be with them soon', contextTh:'ใช้แจ้งว่าแพทย์จะพบในไม่ช้า' },
+      { id:'r9', en:'Could you repeat that, please?', th:'ช่วยพูดซ้ำอีกครั้งได้ไหมคะ?', zh:'请您再说一遍好吗？', ja:'もう一度おっしゃっていただけますか？', phonetic_en:'คุด ยู รีพีท แดท พลีส', phonetic_zh:'ฉิ่ง หนิน จ้าย ซัว อี๋เปี้ยน ห่าว มะ', phonetic_ja:'โม อิจิโดะ ออชชัตเตะ อิตาดาเคมัส กะ', context:'Asking patient to repeat', contextTh:'ใช้ขอให้ผู้ป่วยพูดซ้ำ' },
+      { id:'r10', en:'What is your phone number?', th:'เบอร์โทรศัพท์ของคุณคือเบอร์อะไรคะ?', zh:'您的电话号码是多少？', ja:'お電話番号は何番ですか？', phonetic_en:'วอท อิซ ยอร์ โฟน นัมเบอร์', phonetic_zh:'หนิน เตอะ เตี้ยนฮว่า ห้าวหม่า ซื่อ ตัวเส่า', phonetic_ja:'โอะเดนวะ บังโก วะ นันบัง เดส กะ', context:'Collecting contact number', contextTh:'ใช้เก็บเบอร์โทรในระเบียนผู้ป่วย' },
+      { id:'r11', en:'When did the symptoms start?', th:'อาการเริ่มต้นเมื่อไหร่คะ?', zh:'症状是什么时候开始的？', ja:'症状はいつから始まりましたか？', phonetic_en:'เวน ดิด เดอะ ซิมทัมส์ สตาร์ท', phonetic_zh:'เจิ้งจ้วง ซื่อ เสินเมอะสือโฮ่ว ไคสื่อ เตอ', phonetic_ja:'โชโจ วะ อิตสึกะระ ฮาจิมาริมะชิตะ กะ', context:'Asking onset of symptoms', contextTh:'ใช้สอบถามจุดเริ่มต้นของอาการ' },
+      { id:'r12', en:'Where does it hurt?', th:'เจ็บที่ไหนคะ?', zh:'哪里疼？', ja:'どこが痛みますか？', phonetic_en:'แวร์ ดัซ อิท เฮิร์ท', phonetic_zh:'หนาหลี่ เถิง', phonetic_ja:'โดโคะ กะ อิตามิมัส กะ', context:'Locating area of pain', contextTh:'ใช้ระบุตำแหน่งที่เจ็บปวด' },
+      { id:'r13', en:'How severe is the pain? On a scale of 1 to 10.', th:'ปวดมากแค่ไหนคะ? จากคะแนน 1 ถึง 10', zh:'疼痛有多严重？从1到10分。', ja:'痛みの強さは1から10で表すとどのくらいですか？', phonetic_en:'เฮา ซีเวียร์ อิซ เดอะ เปน ออน อะ สเกล ออฟ วัน ทู เทน', phonetic_zh:'เถิงท่ง โหย่ว ตัว หยานจ้ง ฉง อี เต้า สือ เฟิน', phonetic_ja:'อิตามิ โนะ สึโยซะ วะ อิจิ คาระ จู เดะ อาราวาสึ โตะ โดโนะคุไร เดส กะ', context:'Assessing pain intensity', contextTh:'ใช้วัดระดับความเจ็บปวด' },
+      { id:'r14', en:'Do you have a fever?', th:'คุณมีไข้ไหมคะ?', zh:'您发烧吗？', ja:'熱はありますか？', phonetic_en:'ดู ยู แฮฟ อะ ฟีเวอร์', phonetic_zh:'หนิน ฟาเชา มะ', phonetic_ja:'เน็ตสึ วะ อาริมัส กะ', context:'Checking for fever', contextTh:'ใช้ตรวจสอบอาการมีไข้' },
+      { id:'r15', en:'Are you currently taking any medication?', th:'ตอนนี้คุณกำลังทานยาอะไรอยู่ไหมคะ?', zh:'您目前在服用任何药物吗？', ja:'現在、服用しているお薬はありますか？', phonetic_en:'อาร์ ยู เคอร์เรินท์ลี เทคคิ่ง เอนี เมดิเคชัน', phonetic_zh:'หนิน มู่เฉียน จ้าย ฝูย่ง เริ่นเหอ เย่าอู้ มะ', phonetic_ja:'เกนไซ ฟุคุโย ชิเตะอิรุ โอะคุซุริ วะ อาริมัส กะ', context:'Checking current medications', contextTh:'ใช้ตรวจสอบยาที่ผู้ป่วยทานอยู่' },
+      { id:'r16', en:'Do you have any chronic diseases?', th:'คุณมีโรคประจำตัวไหมคะ?', zh:'您有任何慢性病吗？', ja:'持病や基礎疾患はありますか？', phonetic_en:'ดู ยู แฮฟ เอนี โครนิก ดิซีซิส', phonetic_zh:'หนิน โหย่ว เริ่นเหอ ม่านซิ่งปิ้ง มะ', phonetic_ja:'จิเบียว ยะ คิโซะ ชิกคัง วะ อาริมัส กะ', context:'Screening for chronic conditions', contextTh:'ใช้คัดกรองโรคประจำตัว' },
+      { id:'r19', en:'Please sign here.', th:'กรุณาเซ็นชื่อตรงนี้ด้วยค่ะ', zh:'请在这里签名。', ja:'こちらにご署名をお願いします。', phonetic_en:'พลีส ไซน์ เฮียร์', phonetic_zh:'ฉิ่ง จ้าย เจ้อ หลี่ เชียนหมิง', phonetic_ja:'โคจิระ นิ โกะโชเม โอะ โอะเนไกชิมัส', context:'Requesting patient signature', contextTh:'ใช้ขอลายเซ็นผู้ป่วย' },
+      { id:'r20', en:'We need to check your vital signs first.', th:'เราต้องตรวจสัญญาณชีพก่อนนะคะ', zh:'我们需要先检查您的生命体征。', ja:'まずバイタルサインを測らせていただきます。', phonetic_en:'วี นีด ทู เช็ก ยอร์ ไวทัล ไซน์ส เฟิร์สท์', phonetic_zh:'หว่อเหมิน ซูเย่า เซียน เจี่ยนฉา หนิน เตอ เซิงมิ่ง ถี่เจิง', phonetic_ja:'มาซึ ไบตารุไซน โอะ ฮาคาราเซเตะ อิตาดาคิมัส', context:'Informing about vital sign check', contextTh:'ใช้แจ้งว่าต้องตรวจสัญญาณชีพก่อน' }
     ]
   },
   {
     id: 'direction', labelEn: 'Direction', labelTh: 'การบอกทาง', icon: '🗺️',
     phrases: [
-      { id:'d1', en:'Please register at the Medical Records Room, Number 19, 1st floor, Chalerm Phra Baramee Building.', th:'ลงทะเบียนที่ห้องเวชระเบียน หมายเลข 19 ชั้น 1 อาคารเฉลิมพระบารมีค่ะ', zh:'请在 Chalerm Phra Baramee 大楼一楼19号病历室登记。', phonetic_en:'พลีส เรจิสเตอร์ แอท เดอะ เมดิเคิล เรคคอร์ดส รูม นัมเบอร์ ไนน์ทีน เฟิร์สต์ ฟลอร์ เฉลิมพระบารมี บิลดิ้ง', phonetic_zh:'ฉิ่ง จ้าย Chalerm Phra Baramee ต้าโหลว อีโหลว สือจิ่ว ห้าว ปิ้งลี่ซื่อ เติงจี้', context:'Directing to registration', contextTh:'บอกทางไปลงทะเบียน' },
-      { id:'d2', en:'Please contact customer service centre, 1st floor, Chalerm Phra Baramee Building.', th:'กรุณาติดต่อ customer service centre ชั้น 1 อาคารเฉลิมพระบารมีค่ะ', zh:'请联系 Chalerm Phra Baramee 大楼一楼的客户服务中心。', phonetic_en:'พลีส คอนแทค คัสตอมเมอร์ เซอร์วิส เซนเทอร์ เฟิร์สต์ ฟลอร์ เฉลิมพระบารมี บิลดิ้ง', phonetic_zh:'ฉิ่ง เหลียนซี่ Chalerm Phra Baramee ต้าโหลว อีโหลว เตอ เค่อฮู่ ฝูอู้ จงซิน', context:'Directing to customer service', contextTh:'บอกทางไปศูนย์บริการลูกค้า' },
-      { id:'d3', en:'The laboratory room number 11 is on the first floor of Chalerm Phra Baramee Building.', th:'ห้องปฏิบัติการหมายเลข 11 อยู่ที่ชั้น 1 อาคารเฉลิมพระบารมีค่ะ', zh:'11号化验室在 Chalerm Phra Baramee 大楼一楼。', phonetic_en:'เดอะ แล็บโบระทอรี รูม นัมเบอร์ อิเลฟเวิน อิซ ออน เดอะ เฟิร์สต์ ฟลอร์ ออฟ เฉลิมพระบารมี บิลดิ้ง', phonetic_zh:'สืออี ห้าว ฮว่าเยี่ยนซื่อ จ้าย Chalerm Phra Baramee ต้าโหลว อีโหลว', context:'Directing to lab', contextTh:'บอกทางไปห้องแล็บ' },
-      { id:'d4', en:'X-ray is at room number 33 on the first floor of Boonsom Martin Building.', th:'เอกซ์เรย์ที่ห้องหมายเลข 33 ชั้น 1 อาคารบุญสม มาร์ตินค่ะ', zh:'X光室在 Boonsom Martin 大楼一楼33号房。', phonetic_en:'เอกซ์เรย์ อิซ แอท รูม นัมเบอร์ เทอร์ตี้ ทรี ออน เดอะ เฟิร์สต์ ฟลอร์ ออฟ บุญสม มาร์ติน บิลดิ้ง', phonetic_zh:'เอกซ์กวงซื่อ จ้าย Boonsom Martin ต้าโหลว อีโหลว ซานสือซาน ห้าว ฝาง', context:'Directing to X-ray', contextTh:'บอกทางไปห้องเอกซ์เรย์' },
-      { id:'d5', en:'The pharmacy number 30 is on the first floor of Chalerm Phra Baramee Building.', th:'ห้องยาหมายเลข 30 อยู่ที่ชั้น 1 อาคารเฉลิมพระบารมีค่ะ', zh:'30号药房在 Chalerm Phra Baramee 大楼一楼。', phonetic_en:'เดอะ ฟาร์มาซี นัมเบอร์ เทอร์ตี้ อิซ ออน เดอะ เฟิร์สต์ ฟลอร์ ออฟ เฉลิมพระบารมี บิลดิ้ง', phonetic_zh:'ซานสือ ห้าว เย่าฝาง จ้าย Chalerm Phra Baramee ต้าโหลว อีโหลว', context:'Directing to pharmacy', contextTh:'บอกทางไปห้องยา' },
-      { id:'d6', en:'Please follow the signs.', th:'กรุณาเดินตามป้ายบอกทางค่ะ', zh:'请随指示牌走。', phonetic_en:'พลีส ฟอลโล เดอะ ไซน์ส', phonetic_zh:'ฉิ่ง สุย จื่อซื่อไผ โจ่ว', context:'General direction', contextTh:'บอกให้เดินตามป้าย' },
-      { id:'d7', en:'Please contact cashier number 1 on the first floor of Sujinno Building.', th:'กรุณาติดต่อแคชเชียร์หมายเลข 1 ชั้น 1 อาคารสุจินโณค่ะ', zh:'请联系 Sujinno 大楼一楼1号收银台。', phonetic_en:'พลีส คอนแทค แคชเชียร์ นัมเบอร์ วัน ออน เดอะ เฟิร์สต์ ฟลอร์ ออฟ สุจินโณ บิลดิ้ง', phonetic_zh:'ฉิ่ง เหลียนซี่ Sujinno ต้าโหลว อีโหลว อี ห้าว โซ่วอิ๋นถาย', context:'Directing to cashier 1', contextTh:'บอกทางไปแคชเชียร์ 1 อาคารสุจินโณ' },
-      { id:'d8', en:'Please contact cashier number 2 on the first floor of Chalerm Phra Baramee Building.', th:'กรุณาติดต่อแคชเชียร์หมายเลข 2 ชั้น 1 อาคารเฉลิมพระบารมีค่ะ', zh:'请联系 Chalerm Phra Baramee 大楼一楼2号收银台。', phonetic_en:'พลีส คอนแทค แคชเชียร์ นัมเบอร์ ทู ออน เดอะ เฟิร์สต์ ฟลอร์ ออฟ เฉลิมพระบารมี บิลดิ้ง', phonetic_zh:'ฉิ่ง เหลียนซี่ Chalerm Phra Baramee ต้าโหลว อีโหลว เอ้อร์ ห้าว โซ่วอิ๋นถาย', context:'Directing to cashier 2', contextTh:'บอกทางไปแคชเชียร์ 2 อาคารเฉลิมพระบารมี' },
-      { id:'d9', en:'Please contact cashier number 3 on the first floor of Sriphat Building.', th:'กรุณาติดต่อแคชเชียร์หมายเลข 3 ชั้น 1 อาคารศรีพัฒน์ค่ะ', zh:'请联系 Sriphat 大楼一楼3号收银台。', phonetic_en:'พลีส คอนแทค แคชเชียร์ นัมเบอร์ ทรี ออน เดอะ เฟิร์สต์ ฟลอร์ ออฟ ศรีพัฒน์ บิลดิ้ง', phonetic_zh:'ฉิ่ง เหลียนซี่ Sriphat ต้าโหลว อีโหลว ซาน ห้าว โซ่วอิ๋นถาย', context:'Directing to cashier 3', contextTh:'บอกทางไปแคชเชียร์ 3 อาคารศรีพัฒน์' },
-      { id:'d10', en:'Please contact the ECG room, number 110, on the first floor of Boonsom Martin Building.', th:'กรุณาติดต่อตรวจคลื่นไฟฟ้าหัวใจที่ห้องหมายเลข 110 ชั้น 1 อาคารบุญสม มาร์ตินค่ะ', zh:'请到 Boonsom Martin 大楼一楼110号房进行心电图检查。', phonetic_en:'พลีส คอนแทค เดอะ อีซีจี รูม นัมเบอร์ วัน เทน ออน เดอะ เฟิร์สต์ ฟลอร์ ออฟ บุญสม มาร์ติน บิลดิ้ง', phonetic_zh:'ฉิ่ง ต้าว Boonsom Martin ต้าโหลว อีโหลว อีอีหลิง ห้าว ฝาง จิ้นสิง ซินเตี้ยนถู เจี่ยนฉา', context:'Directing to ECG room', contextTh:'บอกทางไปตรวจคลื่นไฟฟ้าหัวใจ' },
-      { id:'d11', en:'Please get your radiology appointment form at the Radiology Department on the second floor of Sriphat Building.', th:'กรุณารับใบนัดตรวจทางรังสีที่ห้องรังสี ชั้น 2 อาคารศรีพัฒน์ค่ะ', zh:'请到诗帕大楼二楼放射科领取您的检查预约单。', phonetic_en:'พลีส เก็ต ยัวร์ เรดิโอโลจี อะพอยต์เมนต์ ฟอร์ม แอท เดอะ เรดิโอโลจี ดีพาร์ตเมนต์ ออน เดอะ เซคเคินด์ ฟลอร์ ออฟ ศรีพัฒน์ บิลดิ้ง', phonetic_zh:'ฉิ่ง เต้า ชือพ่า ต้าโหลว เอ้อร์ โหลว ฟั่งเซ่อเคอ หลิ่งชวี่ หนิน เตอะ เจี่ยนฉา ยวี่เยว ตาน', context:'Directing to Radiology department', contextTh:'บอกทางไปรับใบนัดตรวจทางรังสี' },
-      { id:'d12', en:'The pharmacy number 16 is on the first floor of Sriphat Building.', th:'ห้องยาหมายเลข 16 อยู่ที่ชั้น 1 อาคารศรีพัฒน์ค่ะ', zh:'16号药房在 Sriphat 大楼一楼。', phonetic_en:'เดอะ ฟาร์มาซี นัมเบอร์ ซิกซ์ทีน อิซ ออน เดอะ เฟิร์สต์ ฟลอร์ ออฟ ศรีพัฒน์ บิลดิ้ง', phonetic_zh:'สือลิ่ว ห้าว เย่าฝาง จ้าย Sriphat ต้าโหลว อีโหลว', context:'Directing to pharmacy 16', contextTh:'บอกทางไปห้องยา 16 อาคารศรีพัฒน์' },
-      { id:'d13', en:'The pediatrics pharmacy is on the sixth floor of Sriphat Building.', th:'ห้องยากุมารเวชศาสตร์อยู่ที่ชั้น 6 อาคารศรีพัฒน์ค่ะ', zh:'儿科药房在 Sriphat 大楼六楼。', phonetic_en:'เดอะ พีเดียทริกส์ ฟาร์มาซี อิซ ออน เดอะ ซิกซ์ท ฟลอร์ ออฟ ศรีพัฒน์ บิลดิ้ง', phonetic_zh:'เอ๋อร์เคอ เย่าฝาง จ้าย Sriphat ต้าโหลว ลิ่วโหลว', context:'Directing to pediatrics pharmacy', contextTh:'บอกทางไปห้องยากุมารเวชศาสตร์' }
+      { id:'d1', en:'Please register at the Medical Records Room, Number 19, 1st floor, Chalerm Phra Baramee Building.', th:'ลงทะเบียนที่ห้องเวชระเบียน หมายเลข 19 ชั้น 1 อาคารเฉลิมพระบารมีค่ะ', zh:'请在 Chalerm Phra Baramee 大楼一楼19号病历室登记。', ja:'チャルームプラバーラミー棟1階の19番、診療記録室で受付をしてください。', phonetic_en:'พลีส เรจิสเตอร์ แอท เดอะ เมดิเคิล เรคคอร์ดส รูม นัมเบอร์ ไนน์ทีน เฟิร์สต์ ฟลอร์ เฉลิมพระบารมี บิลดิ้ง', phonetic_zh:'ฉิ่ง จ้าย Chalerm Phra Baramee ต้าโหลว อีโหลว สือจิ่ว ห้าว ปิ้งลี่ซื่อ เติงจี้', phonetic_ja:'เฉลิมพระบารมี โท อิกไค โนะ จูคิวบัง ชินเรียวคิโรกุชิตสึ เดะ อุเค็ตสึเกะ โอะ ชิเตะ คุดาไซ', context:'Directing to registration', contextTh:'บอกทางไปลงทะเบียน' },
+      { id:'d2', en:'Please contact customer service centre, 1st floor, Chalerm Phra Baramee Building.', th:'กรุณาติดต่อ customer service centre ชั้น 1 อาคารเฉลิมพระบารมีค่ะ', zh:'请联系 Chalerm Phra Baramee 大楼一楼的客户服务中心。', ja:'チャルームプラバーラミー棟1階のカスタマーサービスセンターへお問い合わせください。', phonetic_en:'พลีส คอนแทค คัสตอมเมอร์ เซอร์วิส เซนเทอร์ เฟิร์สต์ ฟลอร์ เฉลิมพระบารมี บิลดิ้ง', phonetic_zh:'ฉิ่ง เหลียนซี่ Chalerm Phra Baramee ต้าโหลว อีโหลว เตอ เค่อฮู่ ฝูอู้ จงซิน', phonetic_ja:'เฉลิมพระบารมี โท อิกไค โนะ คาสึตามา ซาบิสึ เซนตา เอะ โอะโทอิอาวาเสะ คุดาไซ', context:'Directing to customer service', contextTh:'บอกทางไปศูนย์บริการลูกค้า' },
+      { id:'d3', en:'The laboratory room number 11 is on the first floor of Chalerm Phra Baramee Building.', th:'ห้องปฏิบัติการหมายเลข 11 อยู่ที่ชั้น 1 อาคารเฉลิมพระบารมีค่ะ', zh:'11号化验室在 Chalerm Phra Baramee 大楼一楼。', ja:'11番の検査室はチャルームプラバーラミー棟の1階にあります。', phonetic_en:'เดอะ แล็บโบระทอรี รูม นัมเบอร์ อิเลฟเวิน อิซ ออน เดอะ เฟิร์สต์ ฟลอร์ ออฟ เฉลิมพระบารมี บิลดิ้ง', phonetic_zh:'สืออี ห้าว ฮว่าเยี่ยนซื่อ จ้าย Chalerm Phra Baramee ต้าโหลว อีโหลว', phonetic_ja:'จูอิจิบัง โนะ เคนซะชิตสึ วะ เฉลิมพระบารมี โท โนะ อิกไค นิ อาริมัส', context:'Directing to lab', contextTh:'บอกทางไปห้องแล็บ' },
+      { id:'d4', en:'X-ray is at room number 33 on the first floor of Boonsom Martin Building.', th:'เอกซ์เรย์ที่ห้องหมายเลข 33 ชั้น 1 อาคารบุญสม มาร์ตินค่ะ', zh:'X光室在 Boonsom Martin 大楼一楼33号房。', ja:'レントゲン室はブンソム・マーティン棟1階の33番です。', phonetic_en:'เอกซ์เรย์ อิซ แอท รูม นัมเบอร์ เทอร์ตี้ ทรี ออน เดอะ เฟิร์สต์ ฟลอร์ ออฟ บุญสม มาร์ติน บิลดิ้ง', phonetic_zh:'เอกซ์กวงซื่อ จ้าย Boonsom Martin ต้าโหลว อีโหลว ซานสือซาน ห้าว ฝาง', phonetic_ja:'เรนโทเกนชิตสึ วะ บุญสม มาร์ติน โท อิกไค โนะ ซันจูซันบัง เดส', context:'Directing to X-ray', contextTh:'บอกทางไปห้องเอกซ์เรย์' },
+      { id:'d5', en:'The pharmacy number 30 is on the first floor of Chalerm Phra Baramee Building.', th:'ห้องยาหมายเลข 30 อยู่ที่ชั้น 1 อาคารเฉลิมพระบารมีค่ะ', zh:'30号药房在 Chalerm Phra Baramee 大楼一楼。', ja:'30番の薬局はチャルームプラバーラミー棟の1階にあります。', phonetic_en:'เดอะ ฟาร์มาซี นัมเบอร์ เทอร์ตี้ อิซ ออน เดอะ เฟิร์สต์ ฟลอร์ ออฟ เฉลิมพระบารมี บิลดิ้ง', phonetic_zh:'ซานสือ ห้าว เย่าฝาง จ้าย Chalerm Phra Baramee ต้าโหลว อีโหลว', phonetic_ja:'ซันจูบัง โนะ ยักเคียวคุ วะ เฉลิมพระบารมี โท โนะ อิกไค นิ อาริมัส', context:'Directing to pharmacy', contextTh:'บอกทางไปห้องยา' },
+      { id:'d6', en:'Please follow the signs.', th:'กรุณาเดินตามป้ายบอกทางค่ะ', zh:'请随指示牌走。', ja:'案内表示に従ってお進みください。', phonetic_en:'พลีส ฟอลโล เดอะ ไซน์ส', phonetic_zh:'ฉิ่ง สุย จื่อซื่อไผ โจ่ว', phonetic_ja:'อันไน เฮียวจิ นิ ชิตากัตเตะ โอะสึสึมิ คุดาไซ', context:'General direction', contextTh:'บอกให้เดินตามป้าย' },
+      { id:'d7', en:'Please contact cashier number 1 on the first floor of Sujinno Building.', th:'กรุณาติดต่อแคชเชียร์หมายเลข 1 ชั้น 1 อาคารสุจินโณค่ะ', zh:'请联系 Sujinno 大楼一楼1号收银台。', ja:'スジンノー棟1階の1番会計窓口へお越しください。', phonetic_en:'พลีส คอนแทค แคชเชียร์ นัมเบอร์ วัน ออน เดอะ เฟิร์สต์ ฟลอร์ ออฟ สุจินโณ บิลดิ้ง', phonetic_zh:'ฉิ่ง เหลียนซี่ Sujinno ต้าโหลว อีโหลว อี ห้าว โซ่วอิ๋นถาย', phonetic_ja:'สุจินโณ โท อิกไค โนะ อิจิบัง ไคเค มาโดกุจิ เอะ โอะโคชิ คุดาไซ', context:'Directing to cashier 1', contextTh:'บอกทางไปแคชเชียร์ 1 อาคารสุจินโณ' },
+      { id:'d8', en:'Please contact cashier number 2 on the first floor of Chalerm Phra Baramee Building.', th:'กรุณาติดต่อแคชเชียร์หมายเลข 2 ชั้น 1 อาคารเฉลิมพระบารมีค่ะ', zh:'请联系 Chalerm Phra Baramee 大楼一楼2号收银台。', ja:'チャルームプラバーラミー棟1階の2番会計窓口へお越しください。', phonetic_en:'พลีส คอนแทค แคชเชียร์ นัมเบอร์ ทู ออน เดอะ เฟิร์สต์ ฟลอร์ ออฟ เฉลิมพระบารมี บิลดิ้ง', phonetic_zh:'ฉิ่ง เหลียนซี่ Chalerm Phra Baramee ต้าโหลว อีโหลว เอ้อร์ ห้าว โซ่วอิ๋นถาย', phonetic_ja:'เฉลิมพระบารมี โท อิกไค โนะ นิบัง ไคเค มาโดกุจิ เอะ โอะโคชิ คุดาไซ', context:'Directing to cashier 2', contextTh:'บอกทางไปแคชเชียร์ 2 อาคารเฉลิมพระบารมี' },
+      { id:'d9', en:'Please contact cashier number 3 on the first floor of Sriphat Building.', th:'กรุณาติดต่อแคชเชียร์หมายเลข 3 ชั้น 1 อาคารศรีพัฒน์ค่ะ', zh:'请联系 Sriphat 大楼一楼3号收银台。', ja:'シーパット棟1階の3番会計窓口へお越しください。', phonetic_en:'พลีส คอนแทค แคชเชียร์ นัมเบอร์ ทรี ออน เดอะ เฟิร์สต์ ฟลอร์ ออฟ ศรีพัฒน์ บิลดิ้ง', phonetic_zh:'ฉิ่ง เหลียนซี่ Sriphat ต้าโหลว อีโหลว ซาน ห้าว โซ่วอิ๋นถาย', phonetic_ja:'ศรีพัฒน์ โท อิกไค โนะ ซันบัง ไคเค มาโดกุจิ เอะ โอะโคชิ คุดาไซ', context:'Directing to cashier 3', contextTh:'บอกทางไปแคชเชียร์ 3 อาคารศรีพัฒน์' },
+      { id:'d10', en:'Please contact the ECG room, number 110, on the first floor of Boonsom Martin Building.', th:'กรุณาติดต่อตรวจคลื่นไฟฟ้าหัวใจที่ห้องหมายเลข 110 ชั้น 1 อาคารบุญสม มาร์ตินค่ะ', zh:'请到 Boonsom Martin 大楼一楼110号房进行心电图检查。', ja:'心電図検査はブンソム・マーティン棟1階の110番室へお越しください。', phonetic_en:'พลีส คอนแทค เดอะ อีซีจี รูม นัมเบอร์ วัน เทน ออน เดอะ เฟิร์สต์ ฟลอร์ ออฟ บุญสม มาร์ติน บิลดิ้ง', phonetic_zh:'ฉิ่ง ต้าว Boonsom Martin ต้าโหลว อีโหลว อีอีหลิง ห้าว ฝาง จิ้นสิง ซินเตี้ยนถู เจี่ยนฉา', phonetic_ja:'ชินเดนซุ เคนซะ วะ บุญสม มาร์ติน โท อิกไค โนะ เฮียคุจูบังชิตสึ เอะ โอะโคชิ คุดาไซ', context:'Directing to ECG room', contextTh:'บอกทางไปตรวจคลื่นไฟฟ้าหัวใจ' },
+      { id:'d11', en:'Please get your radiology appointment form at the Radiology Department on the second floor of Sriphat Building.', th:'กรุณารับใบนัดตรวจทางรังสีที่ห้องรังสี ชั้น 2 อาคารศรีพัฒน์ค่ะ', zh:'请到诗帕大楼二楼放射科领取您的检查预约单。', ja:'シーパット棟2階の放射線科で検査予約票をお受け取りください。', phonetic_en:'พลีส เก็ต ยัวร์ เรดิโอโลจี อะพอยต์เมนต์ ฟอร์ม แอท เดอะ เรดิโอโลจี ดีพาร์ตเมนต์ ออน เดอะ เซคเคินด์ ฟลอร์ ออฟ ศรีพัฒน์ บิลดิ้ง', phonetic_zh:'ฉิ่ง เต้า ชือพ่า ต้าโหลว เอ้อร์ โหลว ฟั่งเซ่อเคอ หลิ่งชวี่ หนิน เตอะ เจี่ยนฉา ยวี่เยว ตาน', phonetic_ja:'ศรีพัฒน์ โท นิไค โนะ โฮชะเซนกะ เดะ เคนซะ โยยะคุเฮียว โอะ โอะอุเคโทริ คุดาไซ', context:'Directing to Radiology department', contextTh:'บอกทางไปรับใบนัดตรวจทางรังสี' },
+      { id:'d12', en:'The pharmacy number 16 is on the first floor of Sriphat Building.', th:'ห้องยาหมายเลข 16 อยู่ที่ชั้น 1 อาคารศรีพัฒน์ค่ะ', zh:'16号药房在 Sriphat 大楼一楼。', ja:'16番の薬局はシーパット棟の1階にあります。', phonetic_en:'เดอะ ฟาร์มาซี นัมเบอร์ ซิกซ์ทีน อิซ ออน เดอะ เฟิร์สต์ ฟลอร์ ออฟ ศรีพัฒน์ บิลดิ้ง', phonetic_zh:'สือลิ่ว ห้าว เย่าฝาง จ้าย Sriphat ต้าโหลว อีโหลว', phonetic_ja:'จูโรกุบัง โนะ ยักเคียวคุ วะ ศรีพัฒน์ โท โนะ อิกไค นิ อาริมัส', context:'Directing to pharmacy 16', contextTh:'บอกทางไปห้องยา 16 อาคารศรีพัฒน์' },
+      { id:'d13', en:'The pediatrics pharmacy is on the sixth floor of Sriphat Building.', th:'ห้องยากุมารเวชศาสตร์อยู่ที่ชั้น 6 อาคารศรีพัฒน์ค่ะ', zh:'儿科药房在 Sriphat 大楼六楼。', ja:'小児科薬局はシーパット棟の6階にあります。', phonetic_en:'เดอะ พีเดียทริกส์ ฟาร์มาซี อิซ ออน เดอะ ซิกซ์ท ฟลอร์ ออฟ ศรีพัฒน์ บิลดิ้ง', phonetic_zh:'เอ๋อร์เคอ เย่าฝาง จ้าย Sriphat ต้าโหลว ลิ่วโหลว', phonetic_ja:'โชนิกะ ยักเคียวคุ วะ ศรีพัฒน์ โท โนะ รกไค นิ อาริมัส', context:'Directing to pediatrics pharmacy', contextTh:'บอกทางไปห้องยากุมารเวชศาสตร์' }
     ]
   },
   {
     id: 'care', labelEn: 'During Care', labelTh: 'ระหว่างดูแล', icon: '🩺',
     phrases: [
-      { id:'c1', en:'Please lie down.', th:'กรุณานอนลงด้วยค่ะ', zh:'请躺下。', phonetic_en:'พลีส ไลย์ ดาวน์', phonetic_zh:'ฉิ่ง ถ่าง เซี่ย', context:'Asking patient to lie down', contextTh:'ขอให้ผู้ป่วยนอนลง' },
-      { id:'c2', en:'Please sit still.', th:'กรุณานั่งนิ่งๆ ด้วยค่ะ', zh:'请坐好，不要动。', phonetic_en:'พลีส ซิท สทิล', phonetic_zh:'ฉิ่ง จั้ว ห่าว ปู๋เย่า ต้ง', context:'Asking patient to sit still', contextTh:'ขอให้ผู้ป่วยนั่งนิ่งๆ' },
-      { id:'c3', en:'Please roll up your sleeve.', th:'กรุณาพับแขนเสื้อขึ้นด้วยค่ะ', zh:'请卷起袖子。', phonetic_en:'พลีส โรล อัพ ยอร์ สลีฟ', phonetic_zh:'ฉิ่ง จ่วน ฉี่ ซิ่วจึ', context:'Before blood pressure or injection', contextTh:'ขอให้พับแขนเสื้อ' },
-      { id:'c4', en:'Please take a deep breath.', th:'กรุณาหายใจลึกๆ ค่ะ', zh:'请深呼吸。', phonetic_en:'พลีส เทค อะ ดีพ เบรธ', phonetic_zh:'ฉิ่ง เซิน ฮูซี', context:'During lung exam', contextTh:'ขอให้หายใจลึกๆ' },
-      { id:'c5', en:'Please do not move.', th:'กรุณาอย่าขยับนะคะ', zh:'请不要动。', phonetic_en:'พลีส ดู นอท มูฟ', phonetic_zh:'ฉิ่ง ปู๋เย่า ต้ง', context:'During procedure', contextTh:'ขอให้ไม่ขยับ' },
-      { id:'c6', en:'I am going to check your blood pressure.', th:'ฉันกำลังจะวัดความดันโลหิตของคุณค่ะ', zh:'我要为您量血压。', phonetic_en:'ไอ แอม โกอิ้ง ทู เช็ก ยอร์ บลัด เพรชเชอร์', phonetic_zh:'หว่อ เย่า เว่ย หนิน เหลียง เสวี่ยยา', context:'Before BP check', contextTh:'บอกว่าจะวัดความดัน' },
-      { id:'c7', en:'This may feel a little uncomfortable.', th:'อาจจะรู้สึกไม่สบายนิดหน่อยนะคะ', zh:'这可能会有点不舒服。', phonetic_en:'ดิส เมย์ ฟีล อะ ลิทเทิล อันคัมฟอร์ทาเบิล', phonetic_zh:'เจ้อ เข่อเหนิง ฮุ่ย โหย่ว เตี่ยน ปู้ ซูฝู', context:'Warning before procedure', contextTh:'บอกว่าอาจไม่สบายตัวนิดหน่อย' },
-      { id:'c8', en:'Tell me if you feel dizzy.', th:'ถ้าคุณรู้สึกเวียนหัว บอกฉันได้เลยนะคะ', zh:'如果您感到头晕，请告诉我。', phonetic_en:'เทล มี อิฟ ยู ฟีล ดิซซี่', phonetic_zh:'หรูกั่ว หนิน กั่นเต้า โถวยุน ฉิ่ง เก้าซู่ หว่อ', context:'Checking for dizziness', contextTh:'บอกให้แจ้งถ้าเวียนหัว' },
-      { id:'c9', en:'Please wait for the test results.', th:'กรุณารอผลการตรวจสักครู่นะคะ', zh:'请等待检查结果。', phonetic_en:'พลีส เวท ฟอร์ เดอะ เทสท์ รีซัลทส์', phonetic_zh:'ฉิ่ง เติ่งไต้ เจี่ยนฉา เจี๋ยกั่ว', context:'Waiting for results', contextTh:'ขอให้รอผลตรวจ' },
-      { id:'c10', en:'If you feel worse, please return immediately.', th:'หากคุณรู้สึกแย่ลง กรุณากลับมาพบแพทย์ทันทีนะคะ', zh:'如果您感觉情况恶化，请立即回来就诊。', phonetic_en:'อิฟ ยู ฟีล เวิร์ส พลีส รีเทิร์น อิมมีเดียทลี', phonetic_zh:'หรูกั่ว หนิน กั่นเจวี๋ย ฉิงควง เอ้อฮว่า ฉิ่ง ลี่จี๋ หุยไหล จิ้วเจิ่น', context:'Follow-up instruction', contextTh:'บอกให้กลับมาถ้าอาการแย่ลง' },
-      { id:'c11', en:'Do you have any questions?', th:'คุณมีคำถามอะไรไหมคะ?', zh:'您有什么问题吗？', phonetic_en:'ดู ยู แฮฟ เอนี เควสชันส์', phonetic_zh:'หนิน โหย่ว เสินเมอะ เวริ่นถี มะ', context:'Closing encounter', contextTh:'ถามว่ามีคำถามไหม' }
+      { id:'c1', en:'Please lie down.', th:'กรุณานอนลงด้วยค่ะ', zh:'请躺下。', ja:'どうぞ横になってください。', phonetic_en:'พลีส ไลย์ ดาวน์', phonetic_zh:'ฉิ่ง ถ่าง เซี่ย', phonetic_ja:'โดโซะ โยโคะ นิ นัตเตะ คุดาไซ', context:'Asking patient to lie down', contextTh:'ขอให้ผู้ป่วยนอนลง' },
+      { id:'c2', en:'Please sit still.', th:'กรุณานั่งนิ่งๆ ด้วยค่ะ', zh:'请坐好，不要动。', ja:'動かずに座っていてください。', phonetic_en:'พลีส ซิท สทิล', phonetic_zh:'ฉิ่ง จั้ว ห่าว ปู๋เย่า ต้ง', phonetic_ja:'อุโกะคาซึ นิ สึวัตเตะ อิเตะ คุดาไซ', context:'Asking patient to sit still', contextTh:'ขอให้ผู้ป่วยนั่งนิ่งๆ' },
+      { id:'c3', en:'Please roll up your sleeve.', th:'กรุณาพับแขนเสื้อขึ้นด้วยค่ะ', zh:'请卷起袖子。', ja:'袖をまくってください。', phonetic_en:'พลีส โรล อัพ ยอร์ สลีฟ', phonetic_zh:'ฉิ่ง จ่วน ฉี่ ซิ่วจึ', phonetic_ja:'โซเดะ โอะ มาคุตเตะ คุดาไซ', context:'Before blood pressure or injection', contextTh:'ขอให้พับแขนเสื้อ' },
+      { id:'c4', en:'Please take a deep breath.', th:'กรุณาหายใจลึกๆ ค่ะ', zh:'请深呼吸。', ja:'深呼吸をしてください。', phonetic_en:'พลีส เทค อะ ดีพ เบรธ', phonetic_zh:'ฉิ่ง เซิน ฮูซี', phonetic_ja:'ชินโคคิว โอะ ชิเตะ คุดาไซ', context:'During lung exam', contextTh:'ขอให้หายใจลึกๆ' },
+      { id:'c5', en:'Please do not move.', th:'กรุณาอย่าขยับนะคะ', zh:'请不要动。', ja:'動かないでください。', phonetic_en:'พลีส ดู นอท มูฟ', phonetic_zh:'ฉิ่ง ปู๋เย่า ต้ง', phonetic_ja:'อุโกะคาไนเดะ คุดาไซ', context:'During procedure', contextTh:'ขอให้ไม่ขยับ' },
+      { id:'c6', en:'I am going to check your blood pressure.', th:'ฉันกำลังจะวัดความดันโลหิตของคุณค่ะ', zh:'我要为您量血压。', ja:'これから血圧を測ります。', phonetic_en:'ไอ แอม โกอิ้ง ทู เช็ก ยอร์ บลัด เพรชเชอร์', phonetic_zh:'หว่อ เย่า เว่ย หนิน เหลียง เสวี่ยยา', phonetic_ja:'โคเระการะ เค็ตสึอัตสึ โอะ ฮาคาริมัส', context:'Before BP check', contextTh:'บอกว่าจะวัดความดัน' },
+      { id:'c7', en:'This may feel a little uncomfortable.', th:'อาจจะรู้สึกไม่สบายนิดหน่อยนะคะ', zh:'这可能会有点不舒服。', ja:'少し違和感があるかもしれません。', phonetic_en:'ดิส เมย์ ฟีล อะ ลิทเทิล อันคัมฟอร์ทาเบิล', phonetic_zh:'เจ้อ เข่อเหนิง ฮุ่ย โหย่ว เตี่ยน ปู้ ซูฝู', phonetic_ja:'สึโคชิ อิวะคัง กะ อารุ คาโมะ ชิเรมาเซน', context:'Warning before procedure', contextTh:'บอกว่าอาจไม่สบายตัวนิดหน่อย' },
+      { id:'c8', en:'Tell me if you feel dizzy.', th:'ถ้าคุณรู้สึกเวียนหัว บอกฉันได้เลยนะคะ', zh:'如果您感到头晕，请告诉我。', ja:'めまいがしたらすぐにお知らせください。', phonetic_en:'เทล มี อิฟ ยู ฟีล ดิซซี่', phonetic_zh:'หรูกั่ว หนิน กั่นเต้า โถวยุน ฉิ่ง เก้าซู่ หว่อ', phonetic_ja:'เมไม กะ ชิตาระ สึกุ นิ โอะชิราเสะ คุดาไซ', context:'Checking for dizziness', contextTh:'บอกให้แจ้งถ้าเวียนหัว' },
+      { id:'c9', en:'Please wait for the test results.', th:'กรุณารอผลการตรวจสักครู่นะคะ', zh:'请等待检查结果。', ja:'検査結果が出るまで少々お待ちください。', phonetic_en:'พลีส เวท ฟอร์ เดอะ เทสท์ รีซัลทส์', phonetic_zh:'ฉิ่ง เติ่งไต้ เจี่ยนฉา เจี๋ยกั่ว', phonetic_ja:'เคนซะ เค็กกะ กะ เดรุ มาเดะ โชโช โอะมาจิ คุดาไซ', context:'Waiting for results', contextTh:'ขอให้รอผลตรวจ' },
+      { id:'c10', en:'If you feel worse, please return immediately.', th:'หากคุณรู้สึกแย่ลง กรุณากลับมาพบแพทย์ทันทีนะคะ', zh:'如果您感觉情况恶化，请立即回来就诊。', ja:'体調が悪化した場合は、すぐに戻ってきてください。', phonetic_en:'อิฟ ยู ฟีล เวิร์ส พลีส รีเทิร์น อิมมีเดียทลี', phonetic_zh:'หรูกั่ว หนิน กั่นเจวี๋ย ฉิงควง เอ้อฮว่า ฉิ่ง ลี่จี๋ หุยไหล จิ้วเจิ่น', phonetic_ja:'ไทโจ กะ อักกะ ชิตะ บาไอ วะ สึกุ นิ โมดอตเตะ คิเตะ คุดาไซ', context:'Follow-up instruction', contextTh:'บอกให้กลับมาถ้าอาการแย่ลง' },
+      { id:'c11', en:'Do you have any questions?', th:'คุณมีคำถามอะไรไหมคะ?', zh:'您有什么问题吗？', ja:'何かご質問はありますか？', phonetic_en:'ดู ยู แฮฟ เอนี เควสชันส์', phonetic_zh:'หนิน โหย่ว เสินเมอะ เวริ่นถี มะ', phonetic_ja:'นานิกะ โกะชิตสึมง วะ อาริมัส กะ', context:'Closing encounter', contextTh:'ถามว่ามีคำถามไหม' }
     ]
   }
 ];
 
 const DEFAULT_CHINESE_PHONETICS = Object.freeze(Object.fromEntries(
   defaultScenarios.flatMap(s => s.phrases.map(p => [p.id, p.phonetic_zh]))
+));
+const DEFAULT_JAPANESE_PHONETICS = Object.freeze(Object.fromEntries(
+  defaultScenarios.flatMap(s => s.phrases.map(p => [p.id, p.phonetic_ja]))
 ));
 const PREBUILT_MY_AUDIO_BY_TEXT = Object.freeze(Object.fromEntries(
   defaultScenarios.flatMap(s => s.phrases.flatMap(p => {
@@ -387,6 +391,8 @@ let selectedPracticeLang = 'en';
 let isRecording = false;
 let isAddModalRecording = false;
 let isMyanmarPhraseRecording = false;
+let isJapanesePhraseRecording = false;
+let isTranslateRecording = false;
 let recRef = null;
 let translateDebounce = null;
 let modalAutoTimer = null;
@@ -422,6 +428,7 @@ let interpreterRecognitionQuietTurns = 0;
 let interpreterLastSourceLang = 'th';
 let interpreterLastTargetLang = 'en';
 const myTranslationTasks = new Map();
+const jaTranslationTasks = new Map();
 const translationMemory = new Map();
 const translationTasks = new Map();
 const interpreterTtsMemory = new Map();
@@ -449,6 +456,7 @@ function init() {
   renderChatScenarioSelect();
   initQuiz();
   renderQuickPhrases();
+  ensureAllJapaneseTranslations();
   ensureAllMyanmarTranslations();
   openRoomGate(true);
 }
@@ -462,23 +470,30 @@ function hydratePhraseData() {
   const hasCurated=Object.keys(translations).length>0;
   const refreshCurated=hasCurated && localStorage.getItem(MULTILINGUAL_MIGRATION_KEY)!=='1';
   const migrateChineseReadings=localStorage.getItem(CHINESE_THAI_PHONETIC_MIGRATION_KEY)!=='1';
+  const migrateJapanese=hasCurated && localStorage.getItem(JAPANESE_SEED_MIGRATION_KEY)!=='1';
   let changed=false;
   scenarios.forEach(s=>s.phrases.forEach(p=>{
     const curated=translations[p.id];
-    if (refreshCurated && curated) {
-      ['en','zh','phonetic_en','my'].forEach(field=>{
+    if ((refreshCurated || migrateJapanese) && curated) {
+      ['en','zh','ja','phonetic_en','phonetic_ja','my'].forEach(field=>{
         if (curated[field] && p[field]!==curated[field]) { p[field]=curated[field]; changed=true; }
       });
     }
+    if (!p.ja && curated?.ja) { p.ja=curated.ja; changed=true; }
     if (!p.my && curated?.my) { p.my=curated.my; changed=true; }
     if (!p.phonetic_en && p.en) { p.phonetic_en=genPhonetics(p.en); changed=true; }
     if (p.zh && (migrateChineseReadings || !p.phonetic_zh)) {
       const thaiReading=DEFAULT_CHINESE_PHONETICS[p.id] || genPhoneticsZh(p.zh);
       if (p.phonetic_zh!==thaiReading) { p.phonetic_zh=thaiReading; changed=true; }
     }
+    if (p.ja && (migrateJapanese || !p.phonetic_ja)) {
+      const jaReading=curated?.phonetic_ja || DEFAULT_JAPANESE_PHONETICS[p.id] || genPhoneticsJa(p.ja);
+      if (p.phonetic_ja!==jaReading) { p.phonetic_ja=jaReading; changed=true; }
+    }
   }));
   if (refreshCurated) localStorage.setItem(MULTILINGUAL_MIGRATION_KEY,'1');
   if (migrateChineseReadings) localStorage.setItem(CHINESE_THAI_PHONETIC_MIGRATION_KEY,'1');
+  if (migrateJapanese) localStorage.setItem(JAPANESE_SEED_MIGRATION_KEY,'1');
   return changed;
 }
 
@@ -505,6 +520,7 @@ function selectScenario(id) {
   renderPhrases();
   renderPracticeCards();
   renderQuickPhrases();
+  ensureJapaneseTranslations(activeScenarioId);
   ensureMyanmarTranslations(activeScenarioId);
   save();
 }
@@ -546,13 +562,21 @@ function renderPhrases() {
             </div>
           </div>
           <div class="phrase-row">
+            <span class="badge-mini ja">日</span>
+            <div class="phrase-col">
+              <div class="phrase-ja-text">${p.ja ? esc(p.ja) : '<span class="ja-pending">กำลังเตรียมคำแปลภาษาญี่ปุ่น…</span>'}</div>
+              ${p.phonetic_ja ? `<span class="phrase-phonetic">${esc(p.phonetic_ja)}</span>` : ''}
+            </div>
+          </div>
+          <div class="phrase-row">
             <span class="badge-mini my">MY</span>
             <div class="phrase-col"><div class="phrase-my-text">${p.my ? esc(p.my) : '<span class="my-pending">กำลังเตรียมคำแปลภาษาเมียนมาร์…</span>'}</div></div>
           </div>
         </div>
         <div class="phrase-actions">
-          <button class="btn-icon blue" onclick="speakText('${ea(p.en)}','en')"><i class="fas fa-volume-up"></i></button>
-          <button class="btn-icon yellow" onclick="speakText('${ea(p.zh)}','zh')">中</button>
+          <button class="btn-icon blue" title="ฟังภาษาอังกฤษ" onclick="speakText('${ea(p.en)}','en')"><i class="fas fa-volume-up"></i></button>
+          <button class="btn-icon yellow" title="ฟังภาษาจีน" onclick="speakText('${ea(p.zh)}','zh')">中</button>
+          <button class="btn-icon pink" ${p.ja ? '' : 'disabled'} title="ฟังภาษาญี่ปุ่น" onclick="speakText('${ea(p.ja || '')}','ja')">日</button>
           <button class="btn-icon purple" ${p.my ? '' : 'disabled'} title="ฟังภาษาเมียนมาร์" onclick="speakText('${ea(p.my || '')}','my')"><i class="fas fa-volume-up"></i></button>
           <button class="btn-icon green" onclick="openEditModal('${ea(p.id)}')"><i class="fas fa-pen"></i></button>
           <button class="btn-icon red" onclick="openDeleteModal('${ea(p.id)}')"><i class="fas fa-trash"></i></button>
@@ -574,7 +598,55 @@ function renderPhrases() {
         ${p.context ? `<div class="ctx-line">🇬🇧 <strong>EN:</strong> ${esc(p.context)}</div>` : ''}
       </div>` : ''}
       </div>`).join('');
+  ensureJapaneseTranslations(activeScenarioId);
   ensureMyanmarTranslations(activeScenarioId);
+}
+
+async function ensurePhraseJapanese(phrase) {
+  if (phrase.ja) {
+    if (!phrase.phonetic_ja) { phrase.phonetic_ja = genPhoneticsJa(phrase.ja); save(); }
+    return phrase.ja;
+  }
+  const key = phrase.id;
+  if (jaTranslationTasks.has(key)) return jaTranslationTasks.get(key);
+  const task = gTranslate(phrase.th, 'th', 'ja').then(text => {
+    phrase.ja = text;
+    phrase.phonetic_ja = genPhoneticsJa(text);
+    save();
+    return text;
+  }).finally(() => jaTranslationTasks.delete(key));
+  jaTranslationTasks.set(key, task);
+  return task;
+}
+
+async function ensureJapaneseTranslations(scenarioId) {
+  const scenario = scenarios.find(s => s.id === scenarioId);
+  if (!scenario) return;
+  const pending = scenario.phrases.filter(p => p.th && !p.ja);
+  if (!pending.length) return;
+  let index = 0;
+  const workers = Array.from({length: Math.min(3, pending.length)}, async () => {
+    while (index < pending.length) {
+      const phrase = pending[index++];
+      try { await ensurePhraseJapanese(phrase); } catch (e) { /* keep manual editing available if translation is unavailable */ }
+    }
+  });
+  await Promise.all(workers);
+  if (activeScenarioId === scenarioId) { renderPhrases(); renderPracticeCards(); renderQuickPhrases(); }
+}
+
+async function ensureAllJapaneseTranslations() {
+  const pending = scenarios.flatMap(s => s.phrases.filter(p => p.th && !p.ja));
+  if (!pending.length) return;
+  let index = 0;
+  const workers = Array.from({length: Math.min(3, pending.length)}, async () => {
+    while (index < pending.length) {
+      const phrase = pending[index++];
+      try { await ensurePhraseJapanese(phrase); } catch (e) { /* retry when this phrase is next opened */ }
+    }
+  });
+  await Promise.all(workers);
+  renderPhrases(); renderPracticeCards(); renderQuickPhrases();
 }
 
 async function ensurePhraseMyanmar(phrase) {
@@ -731,6 +803,8 @@ function openEditModal(id) {
   document.getElementById('f-phonetic-en').value = phrase.phonetic_en || '';
   document.getElementById('f-zh').value = phrase.zh || '';
   document.getElementById('f-phonetic-zh').value = phrase.phonetic_zh || '';
+  document.getElementById('f-ja').value = phrase.ja || '';
+  document.getElementById('f-phonetic-ja').value = phrase.phonetic_ja || '';
   document.getElementById('f-my').value = phrase.my || '';
   document.getElementById('f-ctx-th').value = phrase.contextTh || '';
   document.getElementById('f-ctx-en').value = phrase.context || '';
@@ -738,11 +812,11 @@ function openEditModal(id) {
 }
 
 function clearModalFields() {
-  ['f-th','f-en','f-phonetic-en','f-zh','f-phonetic-zh','f-my','f-ctx-th','f-ctx-en'].forEach(id => {
+  ['f-th','f-en','f-phonetic-en','f-zh','f-phonetic-zh','f-ja','f-phonetic-ja','f-my','f-ctx-th','f-ctx-en'].forEach(id => {
     const el = document.getElementById(id);
     if (el) { el.value = ''; el.classList.remove('error'); }
   });
-  ['err-th','err-en','err-zh','err-my'].forEach(id => {
+  ['err-th','err-en','err-zh','err-ja','err-my'].forEach(id => {
     const el = document.getElementById(id); if (el) el.textContent = '';
   });
   const prev = document.getElementById('autoPreview');
@@ -770,22 +844,30 @@ function onModalThaiInput() {
 
 async function doAutoTranslate(th) {
   try {
-    const [en, zh, my] = await Promise.all([gTranslate(th,'th','en'), gTranslate(th,'th','zh-CN'), gTranslate(th,'th','my')]);
+    const [en, zh, ja, my] = await Promise.all([
+      gTranslate(th,'th','en'),
+      gTranslate(th,'th','zh-CN'),
+      gTranslate(th,'th','ja'),
+      gTranslate(th,'th','my')
+    ]);
     
     // ใช้ฟังก์ชันเดาคำอ่านที่อัปเกรดแล้ว
     const phonEn = genPhonetics(en);
     const phonZh = genPhoneticsZh(zh);
+    const phonJa = genPhoneticsJa(ja);
     const ctx = analyzeCtx(th, en);
     
-    const fEn = document.getElementById('f-en'), fZh = document.getElementById('f-zh'), fMy = document.getElementById('f-my');
-    const fPhEn = document.getElementById('f-phonetic-en'), fPhZh = document.getElementById('f-phonetic-zh');
+    const fEn = document.getElementById('f-en'), fZh = document.getElementById('f-zh'), fJa = document.getElementById('f-ja'), fMy = document.getElementById('f-my');
+    const fPhEn = document.getElementById('f-phonetic-en'), fPhZh = document.getElementById('f-phonetic-zh'), fPhJa = document.getElementById('f-phonetic-ja');
     const fCtxTh = document.getElementById('f-ctx-th'), fCtxEn = document.getElementById('f-ctx-en');
     
     if (fEn) fEn.value = en;
     if (fZh) fZh.value = zh;
+    if (fJa) fJa.value = ja;
     if (fMy) fMy.value = my;
     if (fPhEn) fPhEn.value = phonEn;
     if (fPhZh) fPhZh.value = phonZh;
+    if (fPhJa) fPhJa.value = phonJa;
     if (fCtxTh) fCtxTh.value = ctx.th;
     if (fCtxEn) fCtxEn.value = ctx.en;
 
@@ -809,6 +891,13 @@ async function doAutoTranslate(th) {
           <i class="fas fa-volume-up" style="color:var(--primary);margin-right:4px"></i> ${esc(zh)}
         </div>
         ${phonZh ? `<span class="auto-preview-phonetic">${esc(phonZh)}</span>` : ''}
+      </div>
+      <div class="auto-preview-row">
+        <div class="auto-preview-label">🇯🇵 日本語 · ภาษาญี่ปุ่น</div>
+        <div class="auto-preview-text" onclick="speakText('${ea(ja)}','ja')" style="cursor:pointer">
+          <i class="fas fa-volume-up" style="color:#be185d;margin-right:4px"></i> ${esc(ja)}
+        </div>
+        ${phonJa ? `<span class="auto-preview-phonetic">${esc(phonJa)}</span>` : ''}
       </div>
       <div class="auto-preview-row">
         <div class="auto-preview-label">🇲🇲 မြန်မာ · ภาษาเมียนมาร์</div>
@@ -842,29 +931,34 @@ async function submitAddPhrase() {
 
   let en = document.getElementById('f-en').value.trim();
   let zh = document.getElementById('f-zh').value.trim();
+  let ja = document.getElementById('f-ja')?.value.trim() || '';
   let my = document.getElementById('f-my').value.trim();
   let phonEn = document.getElementById('f-phonetic-en').value.trim();
   let phonZh = document.getElementById('f-phonetic-zh').value.trim();
+  let phonJa = document.getElementById('f-phonetic-ja')?.value.trim() || '';
   let ctxTh = document.getElementById('f-ctx-th').value.trim();
   let ctxEn = document.getElementById('f-ctx-en').value.trim();
   
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังบันทึก...';
   
-  if (!en || !zh || !my) {
+  if (!en || !zh || !ja || !my) {
     try {
-      const [enR, zhR, myR] = await Promise.all([
+      const [enR, zhR, jaR, myR] = await Promise.all([
         en ? Promise.resolve(en) : gTranslate(th,'th','en'),
         zh ? Promise.resolve(zh) : gTranslate(th,'th','zh-CN'),
+        ja ? Promise.resolve(ja) : gTranslate(th,'th','ja'),
         my ? Promise.resolve(my) : gTranslate(th,'th','my')
       ]);
-      en = enR; zh = zhR; my = myR;
+      en = enR; zh = zhR; ja = jaR; my = myR;
       if (!phonEn) phonEn = genPhonetics(en);
       if (!phonZh) phonZh = genPhoneticsZh(zh);
+      if (!phonJa) phonJa = genPhoneticsJa(ja);
       if (!ctxTh || !ctxEn) { const c = analyzeCtx(th,en); ctxTh = ctxTh || c.th; ctxEn = ctxEn || c.en; }
     } catch (e) {}
   }
   if (en && !phonEn) phonEn=genPhonetics(en);
   if (zh && !phonZh) phonZh=genPhoneticsZh(zh);
+  if (ja && !phonJa) phonJa=genPhoneticsJa(ja);
   
   const isEdit = !!editingId;
   btn.innerHTML = isEdit ? '<i class="fas fa-save"></i> บันทึก' : '<i class="fas fa-plus"></i> เพิ่มประโยค';
@@ -872,14 +966,15 @@ async function submitAddPhrase() {
   
   if (!en) { setErr('err-en','f-en','ไม่สามารถแปลได้ กรุณากรอกเอง'); return; }
   if (!zh) { setErr('err-zh','f-zh','ไม่สามารถแปลได้ กรุณากรอกเอง'); return; }
+  if (!ja) { setErr('err-ja','f-ja','ไม่สามารถแปลได้ กรุณากรอกภาษาญี่ปุ่นเอง'); return; }
   if (!my) { setErr('err-my','f-my','ไม่สามารถแปลได้ กรุณากรอกภาษาเมียนมาร์เอง'); return; }
   
   const s = currentScenario();
   if (isEdit) {
     const idx = s.phrases.findIndex(p => p.id === editingId);
-    if (idx !== -1) s.phrases[idx] = { ...s.phrases[idx], en, th, zh, my, phonetic_en:phonEn, phonetic_zh:phonZh, context:ctxEn, contextTh:ctxTh };
+    if (idx !== -1) s.phrases[idx] = { ...s.phrases[idx], en, th, zh, ja, my, phonetic_en:phonEn, phonetic_zh:phonZh, phonetic_ja:phonJa, context:ctxEn, contextTh:ctxTh };
   } else {
-    s.phrases.push({ id:'c_'+Date.now(), en, th, zh, my, phonetic_en:phonEn, phonetic_zh:phonZh, context:ctxEn, contextTh:ctxTh });
+    s.phrases.push({ id:'c_'+Date.now(), en, th, zh, ja, my, phonetic_en:phonEn, phonetic_zh:phonZh, phonetic_ja:phonJa, context:ctxEn, contextTh:ctxTh });
   }
   save(); closeAddModal(); renderPhrases(); renderPracticeCards(); renderQuickPhrases();
 }
@@ -898,6 +993,25 @@ function toggleAddModalMic() {
   rec.onstart = () => { isAddModalRecording = true; btn.classList.add('recording'); btn.innerHTML = '<i class="fas fa-stop"></i>'; };
   rec.onresult = (e) => { document.getElementById('f-th').value = e.results[0][0].transcript; onModalThaiInput(); };
   rec.onend = () => { isAddModalRecording = false; btn.classList.remove('recording'); btn.innerHTML = '<i class="fas fa-microphone"></i>'; };
+  rec.start();
+}
+
+function toggleJapanesePhraseMic() {
+  const btn = document.getElementById('jaPhraseMicBtn');
+  if (isJapanesePhraseRecording) { recRef && recRef.stop(); return; }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { document.getElementById('err-ja').textContent = 'เบราว์เซอร์นี้ไม่รองรับการรับเสียง กรุณาพิมพ์ภาษาญี่ปุ่น'; return; }
+  const rec = new SR(); rec.lang = 'ja-JP'; rec.continuous = false; rec.interimResults = false; recRef = rec;
+  rec.onstart = () => { isJapanesePhraseRecording = true; btn.classList.add('recording'); btn.innerHTML = '<i class="fas fa-stop"></i>'; };
+  rec.onresult = e => {
+    const field = document.getElementById('f-ja');
+    field.value = e.results[0][0].transcript;
+    field.classList.remove('error');
+    document.getElementById('err-ja').textContent = '';
+    updateJapanesePhonetic();
+  };
+  rec.onerror = e => { document.getElementById('err-ja').textContent = e.error==='language-not-supported' ? 'อุปกรณ์ไม่รองรับการรู้จำเสียงญี่ปุ่น กรุณาพิมพ์แทน' : 'รับเสียงไม่ได้ กรุณาลองอีกครั้งหรือพิมพ์แทน'; };
+  rec.onend = () => { isJapanesePhraseRecording = false; btn.classList.remove('recording'); btn.innerHTML = '<i class="fas fa-microphone"></i>'; };
   rec.start();
 }
 
@@ -935,7 +1049,7 @@ function doDelete() {
 /* ── Google Translate ─────────────────────────────────────── */
 function findPreparedTranslation(source, sl, tl) {
   if (typeof scenarios === 'undefined' || !Array.isArray(scenarios)) return '';
-  const fields={th:'th',en:'en',zh:'zh','zh-CN':'zh',my:'my'};
+  const fields={th:'th',en:'en',zh:'zh','zh-CN':'zh',ja:'ja','ja-JP':'ja',my:'my'};
   const sourceField=fields[sl], targetField=fields[tl];
   if (!sourceField || !targetField) return '';
   const normalize=value=>String(value || '').normalize('NFKC').trim().replace(/\s+/g,' ').replace(/[.!?။၊。！？,，、;；:：]+$/u,'').toLocaleLowerCase();
@@ -951,9 +1065,9 @@ function findPreparedTranslation(source, sl, tl) {
 async function gTranslate(text, sl, tl) {
   const source=String(text || '').trim();
   if (!source) return '';
-  // Google uses zh-CN for simplified Chinese; keep the UI code consistent.
-  sl = sl === 'zh' ? 'zh-CN' : sl;
-  tl = tl === 'zh' ? 'zh-CN' : tl;
+  // Google uses zh-CN for simplified Chinese and ja for Japanese; keep UI codes consistent.
+  sl = sl === 'zh' ? 'zh-CN' : (sl === 'ja-JP' ? 'ja' : sl);
+  tl = tl === 'zh' ? 'zh-CN' : (tl === 'ja-JP' ? 'ja' : tl);
   if (sl===tl) return source;
   const key=`${sl}\u0000${tl}\u0000${source}`;
   const prepared=findPreparedTranslation(source,sl,tl);
@@ -965,14 +1079,15 @@ async function gTranslate(text, sl, tl) {
     // JSONP through the existing Apps Script deployment avoids Safari's
     // cross-origin fetch restrictions on GitHub Pages.
     try {
-      const response=await requestAppsScript('translate',{sl,tl,q:source},9000);
-      if (response?.ok && Array.isArray(response.data?.[0])) {
-        const translated=response.data[0].map(row=>row?.[0] || '').join('').trim();
-        if (translated) {
-          translationMemory.set(key,translated);
-          if (translationMemory.size>250) translationMemory.delete(translationMemory.keys().next().value);
-          return translated;
-        }
+      const response=await requestAppsScript('interpreter-translate',{sl,tl,q:source},9000);
+      const translated=response?.ok
+        ? (String(response.translation || '').trim()
+          || (Array.isArray(response.data?.[0]) ? response.data[0].map(row=>row?.[0] || '').join('').trim() : ''))
+        : '';
+      if (translated) {
+        translationMemory.set(key,translated);
+        if (translationMemory.size>250) translationMemory.delete(translationMemory.keys().next().value);
+        return translated;
       }
       if (response?.error) throw new Error(response.error);
     } catch(error) { console.warn('Apps Script translation proxy unavailable; trying browser endpoints.',error); }
@@ -1019,7 +1134,7 @@ async function gTranslate(text, sl, tl) {
 // so waiting for it before each spoken translation adds a long, useless delay.
 function findInterpreterPreparedTranslation(source, sl, tl) {
   if (typeof scenarios === 'undefined' || !Array.isArray(scenarios)) return '';
-  const fields={th:'th',en:'en',zh:'zh','zh-CN':'zh',my:'my'};
+  const fields={th:'th',en:'en',zh:'zh','zh-CN':'zh',ja:'ja','ja-JP':'ja',my:'my'};
   const sourceField=fields[sl], targetField=fields[tl];
   if (!sourceField || !targetField) return '';
   const normalize=value=>String(value || '').normalize('NFKC').trim().toLocaleLowerCase()
@@ -1130,8 +1245,8 @@ function armInterpreterRecognitionResultWatchdog(rec, sessionToken) {
 async function translateInterpreterText(text, sl, tl) {
   const source=String(text || '').trim();
   if (!source) return '';
-  sl=sl==='zh' ? 'zh-CN' : sl;
-  tl=tl==='zh' ? 'zh-CN' : tl;
+  sl=sl==='zh' ? 'zh-CN' : (sl==='ja-JP' ? 'ja' : sl);
+  tl=tl==='zh' ? 'zh-CN' : (tl==='ja-JP' ? 'ja' : tl);
   if (sl===tl) return source;
   const key=`${sl}\u0000${tl}\u0000${source}`;
   const prepared=findInterpreterPreparedTranslation(source,sl,tl);
@@ -1154,7 +1269,8 @@ async function translateInterpreterText(text, sl, tl) {
 
 function requestAppsScript(action, params={}, timeoutMs=10000) {
   const configuredEndpoint=String(window.HEAL_TRANSLATOR_APPS_SCRIPT_URL || '').trim().replace(/\/$/,'');
-  const endpoints=action.startsWith('interpreter-') && configuredEndpoint
+  const isTranslatorAction=action.startsWith('interpreter-') || action==='translate' || action==='tts';
+  const endpoints=isTranslatorAction && configuredEndpoint
     ? [...new Set([configuredEndpoint,GOOGLE_SHEETS_ENDPOINT])]
     : [GOOGLE_SHEETS_ENDPOINT];
   const requestEndpoint=(index)=>new Promise((resolve,reject)=>{
@@ -1169,7 +1285,7 @@ function requestAppsScript(action, params={}, timeoutMs=10000) {
     const timer=setTimeout(()=>{cleanup();reject(new Error('Apps Script timeout'));},timeoutMs);
     window[callback]=value=>{cleanup();resolve(value);};
     script.onerror=()=>{cleanup();reject(new Error('Apps Script request failed'));};
-    if (action.startsWith('interpreter-')) {
+    if (isTranslatorAction) {
       script.onload=()=>{if(!settled){cleanup();reject(new Error('Apps Script returned no JSONP response'));}};
     }
     script.src=`${endpoints[index]}?${query.toString()}`;
@@ -1339,6 +1455,226 @@ function updateChinesePhonetic() {
   const zh=document.getElementById('f-zh')?.value.trim() || '';
   const field=document.getElementById('f-phonetic-zh');
   if (field) field.value=zh ? genPhoneticsZh(zh) : '';
+}
+
+function genPhoneticsJa(ja) {
+  if (!ja) return '';
+  const raw = String(ja).trim();
+  if (!raw) return '';
+  const norm = s => String(s || '').normalize('NFKC').trim().replace(/[.!?。！？,，、\s]+/gu, '');
+  const needle = norm(raw);
+  if (typeof scenarios !== 'undefined' && Array.isArray(scenarios)) {
+    for (const s of scenarios) {
+      for (const p of s.phrases || []) {
+        if (p.ja && p.phonetic_ja && norm(p.ja) === needle) return p.phonetic_ja;
+      }
+    }
+  }
+  for (const s of defaultScenarios) {
+    for (const p of s.phrases || []) {
+      if (p.ja && p.phonetic_ja && norm(p.ja) === needle) return p.phonetic_ja;
+    }
+  }
+
+  const dict = [
+    ['おはようございます', 'โอฮาโย โกะไซมัส'],
+    ['こんにちは', 'คนนิจิวะ'],
+    ['こんばんは', 'คมบังวะ'],
+    ['ありがとうございます', 'อะริกะโต โกะไซมัส'],
+    ['ありがとうございました', 'อะริกะโต โกะไซมัชตะ'],
+    ['お待たせして申し訳ありません', 'โอะมะตะเสะ ชิเตะ โมชิわけ อะริมะเซ็ง'],
+    ['申し訳ありません', 'โมชิわけ อะริมะเซ็ง'],
+    ['すみません', 'สึมิมะเซ็ง'],
+    ['チャルームプラバーラミー棟', 'ตึกเฉลิมพระบารมี'],
+    ['ブンソム・マーティン棟', 'ตึกบุญสม มาร์ติน'],
+    ['カスタマーサービスセンター', 'คัสตะมา ซาบิสุ เซ็นตา'],
+    ['身分証明書', 'มิบุน โชเมโชะ'],
+    ['パスポート', 'พาสึโปโตะ'],
+    ['アレルギー', 'อะเรรุกี'],
+    ['レントゲン室', 'เร็นโตะเก็ง ชิตสึ'],
+    ['レントゲン', 'เร็นโตะเก็ง'],
+    ['バイタルサイン', 'ไบตะรุ ไซน์'],
+    ['診療記録室', 'ชินเรียว คิโรกุ ชิตสึ'],
+    ['診察室', 'ชินซัตสึ ชิตสึ'],
+    ['検査結果', 'เค็นสะ เค็กกะ'],
+    ['検査室', 'เค็นสะ ชิตสึ'],
+    ['検査台', 'เค็นสะ ได'],
+    ['生年月日', 'เซเน็งกัปปิ'],
+    ['電話番号', 'เด็นวะ บังโก'],
+    ['整理番号', 'เซริ บังโก'],
+    ['健康診断', 'เค็งโค ชินดัน'],
+    ['基礎疾患', 'คิโสะ ชิกกัน'],
+    ['持病', 'จิเบียว'],
+    ['病院', 'เบียวอิน'],
+    ['医師', 'อิชิ'],
+    ['医者', 'อิชะ'],
+    ['先生', 'เซ็นเซ'],
+    ['看護師', 'คังโกะชิ'],
+    ['患者', 'คันจะ'],
+    ['薬局', 'ยักเคียวกุ'],
+    ['お薬', 'โอะคุสึริ'],
+    ['薬', 'คุสึริ'],
+    ['血圧', 'เค็ตสึอัตสึ'],
+    ['体重', 'ไทจู'],
+    ['身長', 'ชินโจ'],
+    ['体温', 'ไทอน'],
+    ['症状', 'โชโจ'],
+    ['痛み', 'อิตะมิ'],
+    ['痛い', 'อิไต'],
+    ['発熱', 'ฮัตสึเน็ตสึ'],
+    ['熱', 'เน็ตสึ'],
+    ['咳', 'เซะกิ'],
+    ['めまい', 'เมะไม'],
+    ['吐き気', 'ฮะกิเกะ'],
+    ['深呼吸', 'ชินโคะคิว'],
+    ['予約', 'โยะยากุ'],
+    ['受付', 'อุเกะทสึเกะ'],
+    ['登録', 'โทโรกุ'],
+    ['署名', 'โชะเม'],
+    ['記入', 'คินิว'],
+    ['用紙', 'โยชิ'],
+    ['お名前', 'โอะนะมะเอะ'],
+    ['名前', 'นะมะเอะ'],
+    ['おかけください', 'โอะคะเกะ คุดะไซ'],
+    ['お待ちください', 'โอะมะจิ คุดะไซ'],
+    ['お越しください', 'โอะโคะชิ คุดะไซ'],
+    ['お知らせください', 'โอะชิระเสะ คุดะไซ'],
+    ['おっしゃってください', 'อตชัตเตะ คุดะไซ'],
+    ['教えてください', 'โอะชิเอะเตะ คุดะไซ'],
+    ['見せてください', 'มิเสะเตะ คุดะไซ'],
+    ['待ってください', 'มัตเตะ คุดะไซ'],
+    ['座ってください', 'สึวัตเตะ คุดะไซ'],
+    ['横になってください', 'โยะโกะ นิ นัตเตะ คุดะไซ'],
+    ['動かないでください', 'อุโกะกะไนเดะ คุดะไซ'],
+    ['ください', 'คุดะไซ'],
+    ['お願いします', 'โอะเนะไก ชิมัส'],
+    ['ございます', 'โกะไซมัส'],
+    ['ですか', 'เดส กะ'],
+    ['ますか', 'มัส กะ'],
+    ['でした', 'เดชิตะ'],
+    ['ました', 'มะชิตะ'],
+    ['ません', 'มะเซ็ง'],
+    ['です', 'เดส'],
+    ['ます', 'มัส'],
+    ['今日', 'เคียว'],
+    ['明日', 'อะชิตะ'],
+    ['昨日', 'คิโน'],
+    ['今', 'อิมะ'],
+    ['朝食後', 'โจโชะกุโกะ'],
+    ['夕食後', 'ยูโชะกุโกะ'],
+    ['食後', 'โชะกุโกะ'],
+    ['食前', 'โชะกุเซ็ง'],
+    ['1日2回', 'อิจินิจิ นิไค'],
+    ['1階', 'อิกไค'],
+    ['2階', 'นิไค'],
+    ['3階', 'ซังไค'],
+    ['19番', 'จูคิวบัง'],
+    ['11番', 'จูอิจิบัง'],
+    ['30番', 'ซังจูบัง'],
+    ['33番', 'ซังจูซังบัง'],
+    ['右', 'มิกิ'],
+    ['左', 'ฮิดะริ'],
+    ['前', 'มะเอะ'],
+    ['後', 'อะโตะ'],
+    ['水', 'มิซึ'],
+    ['お腹', 'โอะนะกะ'],
+    ['頭', 'อะตะมะ'],
+    ['胸', 'มุเนะ'],
+    ['喉', 'โนะโดะ'],
+    ['腕', 'อุเดะ'],
+    ['足', 'อะชิ'],
+    ['手', 'เทะ'],
+    ['目', 'เมะ'],
+    ['耳', 'มิมิ'],
+    ['口', 'คุจิ'],
+    ['鼻', 'ฮะนะ'],
+    ['私', 'วะตะชิ'],
+    ['あなた', 'อะนะตะ'],
+    ['ここ', 'โคะโกะ'],
+    ['そこ', 'โซะโกะ'],
+    ['どこ', 'โดะโกะ'],
+    ['いつ', 'อิตสึ'],
+    ['何', 'นะนิ'],
+    ['はい', 'ไฮ'],
+    ['いいえ', 'อีเอะ'],
+    ['大丈夫', 'ไดโจบุ']
+  ];
+
+  let text = raw;
+  for (const [k, v] of dict) {
+    if (text.includes(k)) text = text.split(k).join(` ${v} `);
+  }
+
+  // Convert Katakana to Hiragana for unified kana syllabary mapping
+  text = text.replace(/[\u30A1-\u30F6]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60));
+
+  const digraphs = {
+    'きゃ':'เคีย','きゅ':'คิว','きょ':'เคียว',
+    'しゃ':'ชะ','しゅ':'ชุ','しょ':'โชะ',
+    'ちゃ':'จะ','ちゅ':'จุ','ちょ':'โจะ',
+    'にゃ':'เนีย','にゅ':'นิว','にょ':'เนียว',
+    'ひゃ':'เฮีย','ひゅ':'ฮิว','ひょ':'เฮียว',
+    'みゃ':'เมีย','みゅ':'มิว','みょ':'เมียว',
+    'りゃ':'เรีย','りゅ':'ริว','りょ':'เรียว',
+    'ぎゃ':'เกีย','ぎゅ':'กิว','ぎょ':'เกียว',
+    'じゃ':'จะ','じゅ':'จุ','じょ':'โจะ',
+    'びゃ':'เบีย','びゅ':'บิว','びょ':'เบียว',
+    'ぴゃ':'เพีย','ぴゅ':'พิว','ぴょ':'เพียว',
+    'ふぁ':'ฟะ','ふぃ':'ฟิ','ふぇ':'เฟะ','ふぉ':'โฟะ',
+    'てぃ':'ทิ','でぃ':'ดิ','うぃ':'วิ','うぇ':'เวะ','うぉ':'โวะ'
+  };
+  const monographs = {
+    'あ':'อะ','い':'อิ','う':'อุ','え':'เอะ','お':'โอะ',
+    'か':'คะ','き':'คิ','く':'คุ','け':'เคะ','こ':'โคะ',
+    'さ':'ซะ','し':'ชิ','す':'สึ','せ':'เสะ','そ':'โซะ',
+    'た':'ทะ','ち':'จิ','つ':'ทสึ','て':'เทะ','と':'โทะ',
+    'な':'นะ','に':'นิ','ぬ':'นุ','ね':'เนะ','の':'โนะ',
+    'は':'ฮะ','ひ':'ฮิ','ふ':'ฟุ','へ':'เฮะ','ほ':'โฮะ',
+    'ま':'มะ','み':'มิ','む':'มุ','め':'เมะ','も':'โมะ',
+    'や':'ยะ','ゆ':'ยุ','よ':'โยะ',
+    'ら':'ระ','り':'ริ','る':'รุ','れ':'เระ','ろ':'โระ',
+    'わ':'วะ','を':'โอะ','ん':'ง',
+    'が':'กะ','ぎ':'กิ','ぐ':'กุ','げ':'เกะ','ご':'โกะ',
+    'ざ':'ซะ','じ':'จิ','ず':'ซึ','ぜ':'เซะ','ぞ':'โซะ',
+    'だ':'ดะ','ぢ':'จิ','づ':'ซึ','で':'เดะ','ど':'โดะ',
+    'ば':'บะ','び':'บิ','ぶ':'บุ','べ':'เบะ','ぼ':'โบะ',
+    'ぱ':'พะ','ぴ':'พิ','ぷ':'พุ','ぺ':'เพะ','ぽ':'โพะ',
+    'ぁ':'อะ','ぃ':'อิ','ぅ':'อุ','ぇ':'เอะ','ぉ':'โอะ',
+    'ゃ':'ยะ','ゅ':'ยุ','ょ':'โยะ','っ':'','ー':'-'
+  };
+
+  let out = '';
+  let i = 0;
+  while (i < text.length) {
+    const two = text.slice(i, i + 2);
+    if (digraphs[two]) {
+      out += ' ' + digraphs[two] + ' ';
+      i += 2;
+      continue;
+    }
+    const ch = text[i];
+    if (Object.prototype.hasOwnProperty.call(monographs, ch)) {
+      if (ch === 'ん' || ch === 'ー') out += monographs[ch];
+      else if (monographs[ch]) out += ' ' + monographs[ch] + ' ';
+      i++;
+      continue;
+    }
+    if (/[。、！？!?.,()]/.test(ch)) {
+      out += ch === '、' ? ', ' : ' ';
+      i++;
+      continue;
+    }
+    out += ch;
+    i++;
+  }
+
+  return out.replace(/\s+-/g, '-').replace(/\s+ง/g, 'ง ').replace(/\s{2,}/g, ' ').trim();
+}
+
+function updateJapanesePhonetic() {
+  const ja=document.getElementById('f-ja')?.value.trim() || '';
+  const field=document.getElementById('f-phonetic-ja');
+  if (field) field.value=ja ? genPhoneticsJa(ja) : '';
 }
 
 function analyzeCtx(th, en) {
@@ -1931,13 +2267,50 @@ function appendUserMsg(text) {
 /* ── Translate ────────────────────────────────────────────── */
 function toggleTranslateMic() {
   const btn = document.getElementById('translateMicBtn');
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition; if(!SR) return;
+  if (isTranslateRecording) { recRef && recRef.stop(); return; }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    showSpeechNotice('เบราว์เซอร์นี้ไม่รองรับการรับเสียง กรุณาพิมพ์ข้อความหรือใช้ Chrome / Safari รุ่นล่าสุด');
+    return;
+  }
   const lang = document.getElementById('fromLang').value;
-  const rec = new SR(); rec.lang = speechLocale(lang); recRef = rec;
-  rec.onstart = () => btn.classList.add('recording');
-  rec.onresult = (e) => { let text=''; for(let i=e.resultIndex;i<e.results.length;i++) if(e.results[i].isFinal) text+=e.results[i][0].transcript; if(text){document.getElementById('translateInput').value=text.trim(); onTranslateInput();} };
-  rec.onend = () => btn.classList.remove('recording');
-  rec.start();
+  const rec = new SR();
+  rec.lang = speechLocale(lang);
+  rec.continuous = false;
+  rec.interimResults = true;
+  recRef = rec;
+  let finalTranscript = '', latestTranscript = '';
+  rec.onstart = () => {
+    isTranslateRecording = true;
+    btn.classList.add('recording');
+    btn.innerHTML = '<i class="fas fa-stop"></i>';
+  };
+  rec.onresult = (e) => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const chunk = e.results[i][0]?.transcript || '';
+      if (e.results[i].isFinal) finalTranscript += chunk;
+      else interim += chunk;
+    }
+    latestTranscript = (finalTranscript + interim).trim();
+    if (latestTranscript) {
+      document.getElementById('translateInput').value = latestTranscript;
+      onTranslateInput();
+    }
+  };
+  rec.onerror = (e) => {
+    if (e.error === 'language-not-supported') {
+      showSpeechNotice(`อุปกรณ์ไม่รองรับการรับเสียงสำหรับ ${languageLabel(lang)} กรุณาพิมพ์ข้อความแทน`);
+    } else if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+      showSpeechNotice('ไม่ได้รับสิทธิ์ไมโครโฟน โปรดอนุญาตไมโครโฟนในการตั้งค่าเบราว์เซอร์');
+    }
+  };
+  rec.onend = () => {
+    isTranslateRecording = false;
+    btn.classList.remove('recording');
+    btn.innerHTML = '<i class="fas fa-microphone"></i>';
+  };
+  try { rec.start(); } catch (e) { isTranslateRecording = false; btn.classList.remove('recording'); btn.innerHTML = '<i class="fas fa-microphone"></i>'; }
 }
 function onTranslateInput() {
   const text = document.getElementById('translateInput').value;
@@ -1961,7 +2334,9 @@ function setTransOutput(text, err='') {
   const toLang = document.getElementById('toLang').value;
   if (!text && !err) { el.innerHTML = '<p class="translate-placeholder">คำแปลจะปรากฏที่นี่...</p>'; return; }
   if (err) { el.innerHTML = `<p class="translate-placeholder">${esc(err)}</p>`; return; }
-  const phonetic=toLang==='en' ? genPhonetics(text) : (toLang==='zh-CN' ? genPhoneticsZh(text) : '');
+  const phonetic=toLang==='en' ? genPhonetics(text)
+    : (toLang==='zh-CN' ? genPhoneticsZh(text)
+    : (toLang==='ja' ? genPhoneticsJa(text) : ''));
   const pronunciation=phonetic ? `<p class="translate-phonetic">${esc(phonetic)}</p>` : '';
   el.innerHTML = `<p class="translate-result">${esc(text)}</p>
     ${pronunciation}
@@ -1975,7 +2350,7 @@ async function addTranslatedToPhrase(translatedText) {
   const input = document.getElementById('translateInput').value.trim();
   const fromLang = document.getElementById('fromLang').value;
   const toLang = document.getElementById('toLang').value;
-  const fieldByLang = { th:'f-th', en:'f-en', 'zh-CN':'f-zh', my:'f-my' };
+  const fieldByLang = { th:'f-th', en:'f-en', 'zh-CN':'f-zh', ja:'f-ja', my:'f-my' };
   openAddModal();
   setTimeout(async () => {
     const fromField=document.getElementById(fieldByLang[fromLang]), toField=document.getElementById(fieldByLang[toLang]);
@@ -1983,11 +2358,17 @@ async function addTranslatedToPhrase(translatedText) {
     if (toField) toField.value=translatedText;
     if (fromLang==='en') document.getElementById('f-phonetic-en').value=genPhonetics(input);
     if (fromLang==='zh-CN') document.getElementById('f-phonetic-zh').value=genPhoneticsZh(input);
+    if (fromLang==='ja') document.getElementById('f-phonetic-ja').value=genPhoneticsJa(input);
     if (toLang==='en') document.getElementById('f-phonetic-en').value=genPhonetics(translatedText);
     if (toLang==='zh-CN') document.getElementById('f-phonetic-zh').value=genPhoneticsZh(translatedText);
+    if (toLang==='ja') document.getElementById('f-phonetic-ja').value=genPhoneticsJa(translatedText);
     if (fromLang==='th') onModalThaiInput();
     else if (!document.getElementById('f-th').value) {
-      try { document.getElementById('f-th').value = toLang==='th' ? translatedText : await gTranslate(input,fromLang,'th'); }
+      try {
+        const thText = toLang==='th' ? translatedText : await gTranslate(input,fromLang,'th');
+        document.getElementById('f-th').value = thText;
+        onModalThaiInput();
+      }
       catch(e) { document.getElementById('err-th').textContent='กรุณากรอกหรือแปลประโยคภาษาไทยก่อนบันทึก'; }
     }
   }, 100);
@@ -2024,6 +2405,10 @@ function renderQuickPhrases() {
           <i class="fas fa-volume-up" style="color:var(--primary);margin-right:4px"></i> ${esc(p.zh)}
         </div>
         ${p.phonetic_zh ? `<div class="q-phonetic-zh">${esc(p.phonetic_zh)}</div>` : ''}
+        <div class="q-ja" onclick="speakText('${ea(p.ja || '')}','ja')" style="cursor:pointer;margin-top:3px">
+          <i class="fas fa-volume-up" style="color:#be185d;margin-right:4px"></i> 🇯🇵 ${p.ja ? esc(p.ja) : '<span class="ja-pending">กำลังเตรียมภาษาญี่ปุ่น…</span>'}
+        </div>
+        ${p.phonetic_ja ? `<div class="q-phonetic-ja">${esc(p.phonetic_ja)}</div>` : ''}
         <div class="q-my" onclick="speakText('${ea(p.my || '')}','my')" style="cursor:pointer;margin-top:4px">
           <i class="fas fa-volume-up" style="color:#7c3aed;margin-right:4px"></i> ${p.my ? esc(p.my) : '<span class="my-pending">กำลังเตรียมภาษาเมียนมาร์…</span>'}
         </div>
@@ -2254,7 +2639,7 @@ function playGoogleTts(text, tl, useInterpreterAudio=false, preloadedSource='') 
       if (preloadedSource) { loadAndPlay(preloadedSource); return; }
       if (!useInterpreterAudio && !preparedPath && !configuredApi) {
         try {
-          const result=await requestAppsScript('tts',{tl,q:text},10000);
+          const result=await requestAppsScript('interpreter-tts',{tl,q:text},10000);
           if (result?.ok && result.audio) { loadAndPlay(`data:audio/mpeg;base64,${result.audio}`); return; }
         } catch(error) { console.warn('Apps Script audio proxy unavailable; trying direct audio.',error); }
       }
@@ -2273,17 +2658,18 @@ function speakText(text, lang) {
   if (!text) return;
   const synth = window.speechSynthesis;
 
-  // Stop any previous Google TTS audio but keep the user-unlocked media element.
+  // Stop any previous Google TTS audio and prime a gesture-unlocked media element for mobile fallback.
   if (currentGoogleAudio) { currentGoogleAudio.pause(); try { currentGoogleAudio.currentTime=0; } catch(e) {} }
+  primeGoogleAudioPlayback();
 
   // Myanmar and Thai use the tested Google TTS route directly. Do not let a
   // silent/incorrect browser voice intercept Thai output.
   if (lang === 'my') { playGoogleTts(text,'my'); return; }
   if (lang === 'th') { playGoogleTts(text,'th'); return; }
 
-  // No Web Speech API — use Google TTS for en/zh
+  // No Web Speech API — use Google TTS for en/zh/ja
   if (!synth) {
-    const langMap2 = { 'en': 'en-US', 'zh': 'zh-CN', 'zh-CN': 'zh-CN', 'th': 'th-TH', 'my': 'my-MM' };
+    const langMap2 = { 'en': 'en-US', 'zh': 'zh-CN', 'zh-CN': 'zh-CN', 'ja': 'ja', 'ja-JP': 'ja', 'th': 'th-TH', 'my': 'my-MM' };
     playGoogleTts(text, langMap2[lang] || 'en-US');
     return;
   }
@@ -2293,7 +2679,7 @@ function speakText(text, lang) {
   // Android Chrome requires a short gap after cancel() before speak()
   setTimeout(function () {
     const utt = new SpeechSynthesisUtterance(text);
-    const langMap = { 'th': 'th-TH', 'en': 'en-US', 'zh': 'zh-CN', 'zh-CN': 'zh-CN', 'my': 'my-MM' };
+    const langMap = { 'th': 'th-TH', 'en': 'en-US', 'zh': 'zh-CN', 'zh-CN': 'zh-CN', 'ja': 'ja-JP', 'ja-JP': 'ja-JP', 'my': 'my-MM' };
     const targetLang = langMap[lang] || lang || 'en-US';
     utt.lang = targetLang;
     utt.rate = speechRate;
@@ -2320,6 +2706,7 @@ function speakText(text, lang) {
         if (!chosen) chosen = voices.find(v => v.lang === 'en-US' || v.lang === 'en_US');
         if (!chosen) chosen = voices.find(v => v.lang.startsWith('en'));
         if (chosen) utt.voice = chosen;
+        utt.onerror = () => playGoogleTts(text, 'en');
         if (synth.paused) synth.resume();
         synth.speak(utt);
 
@@ -2342,6 +2729,7 @@ function speakText(text, lang) {
 
         if (chosen) {
           utt.voice = chosen;
+          utt.onerror = () => playGoogleTts(text, 'zh-CN');
           if (synth.paused) synth.resume();
           synth.speak(utt);
         } else {
@@ -2349,11 +2737,45 @@ function speakText(text, lang) {
           playGoogleTts(text, 'zh-CN');
         }
 
+      } else if (targetLang === 'ja-JP') {
+        // Female Japanese — priority order (covers iOS, Android, Windows, macOS)
+        const femaleJA = [
+          'Kyoko', 'O-Ren',                   // macOS / iOS
+          'Google 日本語', 'Google Japanese',   // Android / Chrome
+          'Microsoft Nanami',                 // Windows / Edge neural
+          'Microsoft Haruka Desktop', 'Microsoft Haruka', // Windows
+          'Microsoft Ayumi', 'Microsoft Sayaka',
+          '日本語'
+        ];
+        for (const name of femaleJA) {
+          chosen = voices.find(v => v.name.includes(name) && /^ja([-_]|$)/i.test(v.lang));
+          if (chosen) break;
+        }
+        if (!chosen) {
+          for (const name of femaleJA) {
+            chosen = voices.find(v => v.name.includes(name));
+            if (chosen) break;
+          }
+        }
+        if (!chosen) chosen = voices.find(v => v.lang === 'ja-JP' || v.lang === 'ja_JP');
+        if (!chosen) chosen = voices.find(v => /^ja([-_]|$)/i.test(v.lang));
+
+        if (chosen) {
+          utt.voice = chosen;
+          utt.onerror = () => playGoogleTts(text, 'ja');
+          if (synth.paused) synth.resume();
+          synth.speak(utt);
+        } else {
+          // No Japanese voice on this device — fall back to Google TTS Audio
+          playGoogleTts(text, 'ja');
+        }
+
       } else {
         chosen = voices.find(v => v.lang.replace('_', '-') === targetLang);
         if (!chosen) chosen = voices.find(v => v.lang.startsWith(targetLang.split('-')[0]));
         if (!chosen && targetLang === 'my-MM') { playGoogleTts(text, 'my'); return; }
         if (!chosen && targetLang === 'th-TH') { playGoogleTts(text, 'th'); return; }
+        if (!chosen && targetLang === 'ja-JP') { playGoogleTts(text, 'ja'); return; }
         if (chosen) utt.voice = chosen;
         if (synth.paused) synth.resume();
         synth.speak(utt);
@@ -2373,13 +2795,15 @@ function speakText(text, lang) {
         pickVoiceAndSpeak();
       };
       synth.addEventListener('voiceschanged', onVC);
-      // Safety fallback: if voices never fire, try Google TTS for zh
+      // Safety fallback: if voices never fire, try Google TTS for zh/ja
       setTimeout(function () {
         if (!done) {
           done = true;
           synth.removeEventListener('voiceschanged', onVC);
           if (targetLang === 'zh-CN') {
             playGoogleTts(text, 'zh-CN');
+          } else if (targetLang === 'ja-JP') {
+            playGoogleTts(text, 'ja');
           } else {
             pickVoiceAndSpeak();
           }
@@ -2447,15 +2871,28 @@ function speechLocaleOptions(lang) {
   return ({
     th:['th-TH','th'], en:['en-US','en-GB','en'],
     zh:['zh-CN','cmn-Hans-CN','zh-TW'], 'zh-CN':['zh-CN','cmn-Hans-CN','zh-TW'],
+    ja:['ja-JP','ja'], 'ja-JP':['ja-JP','ja'],
     my:['my-MM','my']
   })[lang] || [lang];
 }
-function languageLabel(lang) { return ({ th:'ภาษาไทย', en:'English', 'zh-CN':'中文', my:'မြန်မာ (เมียนมาร์)' })[lang] || lang; }
+function languageLabel(lang) {
+  return ({
+    th:'ภาษาไทย', en:'English',
+    zh:'中文', 'zh-CN':'中文',
+    ja:'日本語 (ญี่ปุ่น)', 'ja-JP':'日本語 (ญี่ปุ่น)',
+    my:'မြန်မာ (เมียนมาร์)'
+  })[lang] || lang;
+}
 function detectInterpreterLanguage(text, expectedLang='th') {
   const value=String(text || '');
   if (/[\u0E00-\u0E7F]/.test(value)) return 'th';
   if (/[\u1000-\u109F\uA9E0-\uA9FF\uAA60-\uAA7F]/.test(value)) return 'my';
-  if (/[\u4E00-\u9FFF]/.test(value)) return 'zh-CN';
+  if (/[\u3040-\u309F\u30A0-\u30FF\u31F0-\u31FF\uFF66-\uFF9F]/.test(value)) return 'ja';
+  if (/[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\u3005]/.test(value)) {
+    const selected=typeof patientLanguage==='function' ? patientLanguage() : '';
+    if (expectedLang==='ja' || expectedLang==='ja-JP' || selected==='ja') return 'ja';
+    return 'zh-CN';
+  }
   if (/[A-Za-z]/.test(value)) return 'en';
   return expectedLang;
 }
@@ -2468,7 +2905,7 @@ function bestRecognitionTranscript(result, expectedLang) {
   if (!alternatives.length) return '';
   const top=alternatives[0];
   const expected=alternatives.find(item=>item.lang===expectedLang);
-  const foreign=alternatives.find(item=>item.lang!==expectedLang && ['th','en','zh-CN','my'].includes(item.lang));
+  const foreign=alternatives.find(item=>item.lang!==expectedLang && ['th','en','zh-CN','ja','my'].includes(item.lang));
   if (foreign && !expected) return foreign.text;
   if (foreign && foreign.confidence>0 && foreign.confidence>=(expected?.confidence || top.confidence)-0.15) return foreign.text;
   return top.text;
@@ -2940,10 +3377,24 @@ function speakInterpreterNativeChunk(text, lang, locale, voice, shouldContinue=(
 }
 async function getInterpreterVoice(synth, lang, locale) {
   if (!synth) return null;
+  const preferredNames = {
+    ja: ['Kyoko', 'O-Ren', 'Google 日本語', 'Google Japanese', 'Microsoft Nanami', 'Microsoft Haruka Desktop', 'Microsoft Haruka', 'Microsoft Ayumi'],
+    'ja-JP': ['Kyoko', 'O-Ren', 'Google 日本語', 'Google Japanese', 'Microsoft Nanami', 'Microsoft Haruka Desktop', 'Microsoft Haruka', 'Microsoft Ayumi'],
+    en: ['Samantha', 'Google US English', 'Microsoft Zira Desktop', 'Microsoft Zira', 'Karen', 'Victoria'],
+    'zh-CN': ['Ting-Ting', 'Tingting', 'Google 普通话（中国大陆）', 'Google Chinese (Simplified)', 'Microsoft Huihui Desktop', 'Microsoft Huihui', 'Microsoft Yaoyao'],
+    zh: ['Ting-Ting', 'Tingting', 'Google 普通话（中国大陆）', 'Google Chinese (Simplified)', 'Microsoft Huihui Desktop', 'Microsoft Huihui', 'Microsoft Yaoyao'],
+    th: ['Kanya', 'Narisa', 'Google ไทย', 'Google Thai', 'Microsoft Premwadee']
+  };
+  const prefix = String(lang || '').split('-')[0].toLowerCase();
   const find=()=>{
     const voices=synth.getVoices() || [];
+    const names = preferredNames[lang] || preferredNames[prefix] || [];
+    for (const name of names) {
+      const match = voices.find(v => String(v.name || '').includes(name) && String(v.lang || '').toLowerCase().startsWith(prefix));
+      if (match) return match;
+    }
     return voices.find(v=>String(v.lang || '').replace('_','-').toLowerCase()===locale.toLowerCase())
-      || voices.find(v=>String(v.lang || '').toLowerCase().startsWith(lang.toLowerCase())) || null;
+      || voices.find(v=>String(v.lang || '').toLowerCase().startsWith(prefix)) || null;
   };
   let voice=find();
   if (voice) return voice;
@@ -3013,6 +3464,8 @@ function restartInterpreterRecognitionForNewTurn() {
 }
 function switchInterpreterTurn() {
   if (!interpreterActive || interpreterBusy) return;
+  primeInterpreterAudioContext();
+  primeGoogleAudioPlayback();
   interpreterNextLang = interpreterNextLang === 'th' ? patientLanguage() : 'th';
   document.getElementById('interpreterStatus').textContent=`สลับแล้ว · กำลังเริ่มฟัง ${languageLabel(interpreterNextLang)}…`;
   restartInterpreterRecognitionForNewTurn();

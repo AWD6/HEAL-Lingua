@@ -36,7 +36,7 @@ function recognizeInterpreterSpeech_(params) {
   const requestId = String(params.requestId || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 80);
   try {
     const lang = String(params.lang || 'my-MM');
-    const allowed = ['my-MM'];
+    const allowed = ['my-MM', 'ja-JP'];
     const audio = String(params.audio || '');
     if (!requestId) throw new Error('Invalid speech request id');
     if (allowed.indexOf(lang) === -1) throw new Error('Unsupported speech language');
@@ -87,7 +87,7 @@ function doGet(e) {
   const callback = String(params.callback || '');
   const action = String(params.action || '');
   try {
-    if (action === 'interpreter-translate') {
+    if (action === 'interpreter-translate' || action === 'translate') {
       const source = String(params.q || '').trim();
       const from = String(params.sl || 'auto');
       const to = String(params.tl || 'th');
@@ -111,7 +111,7 @@ function doGet(e) {
       if (!translation) throw new Error('Empty translation response');
       return jsonpOrJson_({ ok: true, translation: translation }, callback);
     }
-    if (action === 'interpreter-tts') {
+    if (action === 'interpreter-tts' || action === 'tts') {
       const source = String(params.q || '').trim();
       const to = String(params.tl || 'th');
       if (!source || source.length > 250) throw new Error('Invalid text');

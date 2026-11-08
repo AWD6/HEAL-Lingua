@@ -4,7 +4,7 @@ Brand name: **HEAL Lingua** — **Healthcare Empathy Across Languages**.
 
 Upload the contents of this folder to the repository root. `index.html` must stay at the root. Keep `social-preview.png`, `interpreter-stt.js`, `assets/audio/my/`, and `vendor/` in their package paths.
 
-This update starts Google Apps Script translation at once alongside the direct Google Translate request, shortens end-of-speech waits, removes the keyboard-dictation fallback, and uses Google Cloud Speech-to-Text (`my-MM`) for Burmese listening. Thai, English, and Chinese listening continue to use browser Speech Recognition.
+This update starts Google Apps Script translation at once alongside the direct Google Translate request, shortens end-of-speech waits, removes the keyboard-dictation fallback, and uses Google Cloud Speech-to-Text (`my-MM`) for Burmese listening. Thai, English, Chinese, and Japanese (`ja-JP`) listening use browser Speech Recognition across iOS, Android, Windows, and macOS. Japanese (`🇯🇵 日本語`) is also included across Phrases (all 50 curated medical phrases + Thai phonetic readings), Google Translate, and AI Translator.
 
 **Burmese Cloud STT needs one-time setup before it can work:** enable Cloud Speech-to-Text API and billing, store an API key restricted to that API in Apps Script Script Properties as `HEAL_SPEECH_API_KEY`, replace Apps Script `Code.gs` with this package's version, then deploy a new Web app version. Keep the key out of GitHub. Follow [SPEECH_TO_TEXT_SETUP.md](SPEECH_TO_TEXT_SETUP.md).
 

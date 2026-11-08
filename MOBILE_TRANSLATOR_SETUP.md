@@ -8,4 +8,4 @@
 
 การฟังพม่าใช้ Google Cloud Speech-to-Text (`my-MM`) ผ่าน Apps Script เพราะความรองรับของ speech engine ใน browser แตกต่างกัน โปรดทำตามขั้นตอนใน [SPEECH_TO_TEXT_SETUP.md](SPEECH_TO_TEXT_SETUP.md) ก่อนใช้พม่า โดยต้องตั้ง API key ใน Script Properties และ deploy `Code.gs` รุ่นใหม่ ไม่มีช่องรับเสียงสำรองหรือ dictation ผ่านแป้นพิมพ์
 
-ภาษาไทย อังกฤษ และจีนยังใช้ Speech Recognition ที่ browser มีให้ ระบบเลือกภาษาที่กำลังฟังได้ด้วยปุ่ม **สลับภาษาที่ฟังเอง** และเริ่มแปล/อ่านออกเสียงหลังจบประโยค
+ภาษาไทย อังกฤษ จีน และญี่ปุ่น (`ja-JP`) ใช้ Speech Recognition ที่ browser มีให้บน iOS, Android, Windows และ macOS ระบบเลือกภาษาที่กำลังฟังได้ด้วยปุ่ม **สลับภาษาที่ฟังเอง** และเริ่มแปล/อ่านออกเสียงหลังจบประโยค

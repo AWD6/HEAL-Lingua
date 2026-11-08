@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link rel="stylesheet" href="style.css?v=safariffix1">
+  <link rel="stylesheet" href="style.css?v=ja1">
 </head>
 <body>
 
@@ -50,6 +50,8 @@
       <span class="lang-badge en">🇬🇧 English</span>
       <span class="dot">·</span>
       <span class="lang-badge zh">🇨🇳 中文</span>
+      <span class="dot">·</span>
+      <span class="lang-badge ja">🇯🇵 日本語</span>
       <span class="dot">·</span>
       <span class="lang-badge my">🇲🇲 မြန်မာ</span>
     </div>
@@ -233,7 +235,7 @@
           <div class="mini-avatar"><i class="fas fa-language"></i></div>
           <div>
             <div class="panel-title">Google Translate</div>
-            <div class="panel-sub">แปลข้อความหรือกดไมค์ · ไทย · English · 中文 · မြန်မာ</div>
+            <div class="panel-sub">แปลข้อความหรือกดไมค์ · ไทย · English · 中文 · 日本語 · မြန်မာ</div>
           </div>
         </div>
       </div>
@@ -242,22 +244,24 @@
         <div class="ai-promo-copy">
           <span class="ai-promo-eyebrow">ล่ามแปลพร้อม · AI</span>
           <strong>คุยได้เลย ไม่ต้องพิมพ์</strong>
-          <span>พูดโต้ตอบได้ทันที ไทย ↔ English · 中文 · မြန်မာ</span>
+          <span>พูดโต้ตอบได้ทันที ไทย ↔ English · 中文 · 日本語 · မြန်မာ</span>
         </div>
         <button type="button" class="ai-promo-button" onclick="switchTab('ai-translator')">ลองล่ามแปลพร้อม <i class="fas fa-arrow-right"></i></button>
       </div>
       <div class="translate-lang-row">
-        <select class="lang-select" id="fromLang">
+        <select class="lang-select" id="fromLang" onchange="onTranslateInput()">
           <option value="th">🇹🇭 ไทย</option>
           <option value="en">🇬🇧 English</option>
           <option value="zh-CN">🇨🇳 中文</option>
+          <option value="ja">🇯🇵 日本語 (ญี่ปุ่น)</option>
           <option value="my">🇲🇲 မြန်မာ (เมียนมาร์)</option>
         </select>
         <button class="btn-swap" onclick="swapLangs()"><i class="fas fa-right-left"></i></button>
-        <select class="lang-select" id="toLang">
+        <select class="lang-select" id="toLang" onchange="onTranslateInput()">
           <option value="en">🇬🇧 English</option>
           <option value="th">🇹🇭 ไทย</option>
           <option value="zh-CN">🇨🇳 中文</option>
+          <option value="ja">🇯🇵 日本語 (ญี่ปุ่น)</option>
           <option value="my">🇲🇲 မြန်မာ (เมียนมาร์)</option>
         </select>
       </div>
@@ -286,7 +290,7 @@
           <span class="ai-hero-kicker"><i class="fas fa-circle"></i> ล่ามแปลพร้อม | AI Translator</span>
           <h2>AI Translator</h2>
           <p>เลือกคู่ภาษา ไทย ↔ ภาษาผู้ป่วย แล้วกดสลับเองเมื่อเปลี่ยนผู้พูด — ระบบแปลและอ่านออกเสียงทุกครั้ง</p>
-          <div class="ai-language-chips"><span>🇹🇭 ไทย</span><i class="fas fa-arrow-right"></i><span>🇬🇧 English</span><span>🇨🇳 中文</span><span>🇲🇲 မြန်မာ</span></div>
+          <div class="ai-language-chips"><span>🇹🇭 ไทย</span><i class="fas fa-arrow-right"></i><span>🇬🇧 English</span><span>🇨🇳 中文</span><span>🇯🇵 日本語</span><span>🇲🇲 မြန်မာ</span></div>
         </div>
         <div class="ai-hero-orb"><div class="ai-hero-orb-core"></div><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
       </div>
@@ -304,6 +308,7 @@
         <select class="lang-select" id="interpreterLang" onchange="onInterpreterLanguageChange()">
           <option value="en">🇬🇧 English</option>
           <option value="zh-CN">🇨🇳 中文</option>
+          <option value="ja">🇯🇵 日本語 (ญี่ปุ่น)</option>
           <option value="my">🇲🇲 မြန်မာ (เมียนมาร์)</option>
         </select>
         <label class="interpreter-label" for="interpreterFirstTurn">ใครพูดก่อน?</label>
@@ -389,6 +394,23 @@
         <div class="field-error" id="err-zh"></div>
       </div>
       <div class="field-group">
+        <label class="field-label"><span class="badge-phonetic"></span> 中文 · อักษรไทย</label>
+        <input type="text" id="f-phonetic-zh" class="field-input" placeholder="ระบบสร้างเป็นอักษรไทยให้อัตโนมัติ">
+      </div>
+      <div class="field-group">
+        <label class="field-label">
+          <span class="badge-lang ja">日</span> 日本語 · ภาษาญี่ปุ่น (แก้ไขได้)
+          <button type="button" class="btn-field-speak" title="ฟังภาษาญี่ปุ่น" onclick="speakText(document.getElementById('f-ja').value,'ja')"><i class="fas fa-volume-up"></i></button>
+          <button type="button" class="btn-field-mic" id="jaPhraseMicBtn" title="พูดภาษาญี่ปุ่น" onclick="toggleJapanesePhraseMic()"><i class="fas fa-microphone"></i></button>
+        </label>
+        <input type="text" id="f-ja" class="field-input" placeholder="AI が自動で翻訳します / พิมพ์ภาษาญี่ปุ่น" oninput="updateJapanesePhonetic()">
+        <div class="field-error" id="err-ja"></div>
+      </div>
+      <div class="field-group">
+        <label class="field-label"><span class="badge-phonetic"></span> 日本語 · อักษรไทย</label>
+        <input type="text" id="f-phonetic-ja" class="field-input" placeholder="ระบบสร้างคำอ่านญี่ปุ่นเป็นอักษรไทยให้อัตโนมัติ">
+      </div>
+      <div class="field-group">
         <label class="field-label">
           <span class="badge-lang my">MY</span> မြန်မာ · ภาษาเมียนมาร์
           <button type="button" class="btn-field-speak" title="ฟังภาษาเมียนมาร์" onclick="speakText(document.getElementById('f-my').value,'my')"><i class="fas fa-volume-up"></i></button>
@@ -396,10 +418,6 @@
         </label>
         <input type="text" id="f-my" class="field-input" placeholder="แปลอัตโนมัติหรือพิมพ์ภาษาเมียนมาร์">
         <div class="field-error" id="err-my"></div>
-      </div>
-      <div class="field-group">
-        <label class="field-label"><span class="badge-phonetic"></span> 中文 · อักษรไทย</label>
-        <input type="text" id="f-phonetic-zh" class="field-input" placeholder="ระบบสร้างเป็นอักษรไทยให้อัตโนมัติ">
       </div>
       <div class="field-group">
         <label class="field-label"><span class="badge-ctx">?</span> ใช้ในสถานการณ์ไหน (ไทย)</label>
@@ -434,10 +452,10 @@
 </div>
 
 <script src="vendor/pinyin-pro.min.js"></script>
-<script src="translations.js"></script>
+<script src="translations.js?v=ja1"></script>
 <script src="translator-config.js?v=4"></script>
 <script src="interpreter-stt.js?v=2"></script>
-<script src="script.js?v=interpreter-mobile-fix10"></script>
+<script src="script.js?v=ja1"></script>
 </body>
 </html>
 
