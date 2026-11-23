@@ -731,9 +731,6 @@ function renderUsageDashboard() {
     ? dashboardState.lastSyncTime.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' น.'
     : 'พร้อมใช้งาน';
 
-  const topBadge = document.getElementById('headerTotalUsageBadge');
-  if (topBadge) topBadge.textContent = `${allTimeTotal.toLocaleString()} ครั้ง`;
-
   let periodSubControlHtml = '';
   if (dashboardState.periodMode === 'day') {
     periodSubControlHtml = `
