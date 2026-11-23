@@ -800,7 +800,7 @@ function renderUsageDashboard() {
       <div class="dash-hero-top">
         <div class="dash-live-pill">
           <span class="dash-live-dot"></span>
-          <span>REAL-TIME · GOOGLE SHEETS</span>
+          <span>Dashboard · Google Sheets</span>
         </div>
         <div class="dash-hero-actions">
           <button type="button" class="dash-action-btn" id="dashSyncBtn" onclick="syncUsageDashboardNow(true)" title="ดึงข้อมูลล่าสุดจาก Google Sheet">
@@ -1181,9 +1181,9 @@ function exportDashboardCsv() {
 }
 
 function openUsageDashboardTab() {
-  const btn = document.querySelector('.tab-btn[data-tab="dashboard"]');
+  const bannerBtn = document.getElementById('bannerDashboardBtn');
   if (typeof switchTab === 'function') {
-    switchTab('dashboard', btn);
+    switchTab('dashboard', bannerBtn);
   }
   renderUsageDashboard();
   syncUsageDashboardNow(false);

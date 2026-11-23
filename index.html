@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link rel="stylesheet" href="style.css?v=dash1">
+  <link rel="stylesheet" href="style.css?v=dash3">
 </head>
 <body>
 
@@ -34,6 +34,9 @@
     <div class="banner">
       <div class="banner-badge">OPD - ER</div>
       <div class="banner-text">conceived, designed, and Brought to Life by RN.Patipon Wiyo</div>
+      <button type="button" class="banner-dashboard-btn" id="bannerDashboardBtn" onclick="openUsageDashboardTab()">
+        <i class="fas fa-chart-pie"></i> Dashboard
+      </button>
     </div>
   </div>
 
@@ -98,12 +101,6 @@
         <span class="tab-label-en">AI Translator</span>
         <span class="tab-label-th">AI ล่ามสด</span>
         <span class="ai-live-badge">LIVE</span>
-      </button>
-      <button class="tab-btn tab-btn-dash" data-tab="dashboard" onclick="switchTab('dashboard',this)">
-        <i class="fas fa-chart-pie"></i>
-        <span class="tab-label-en">Dashboard</span>
-        <span class="tab-label-th">สถิติการใช้</span>
-        <span class="dash-live-badge">REAL-TIME</span>
       </button>
     </div>
 
@@ -465,8 +462,8 @@
 <script src="translations.js?v=ja1"></script>
 <script src="translator-config.js?v=4"></script>
 <script src="interpreter-stt.js?v=3"></script>
-<script src="script.js?v=dash2"></script>
-<script src="dashboard.js?v=dash2"></script>
+<script src="script.js?v=dash3"></script>
+<script src="dashboard.js?v=dash3"></script>
 </body>
 </html>
 

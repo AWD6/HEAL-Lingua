@@ -2423,8 +2423,10 @@ function switchTab(tabId, btnEl) {
   if (tabId !== 'ai-translator' && interpreterActive) stopInterpreter();
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  if (btnEl) btnEl.classList.add('active');
-  else { const b = document.querySelector('[data-tab="'+tabId+'"]'); if(b) b.classList.add('active'); }
+  if (btnEl && btnEl.classList.contains('tab-btn')) btnEl.classList.add('active');
+  else { const b = document.querySelector('.tab-btn[data-tab="'+tabId+'"]'); if(b) b.classList.add('active'); }
+  const bannerDashBtn = document.getElementById('bannerDashboardBtn');
+  if (bannerDashBtn) bannerDashBtn.classList.toggle('active', tabId === 'dashboard');
   const panel = document.getElementById('panel-'+tabId); if(panel) panel.classList.add('active');
   const appContainer = document.querySelector('.app-container');
   if (appContainer) appContainer.classList.toggle('dashboard-expanded', tabId === 'dashboard');
