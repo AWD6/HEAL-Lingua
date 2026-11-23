@@ -2426,6 +2426,12 @@ function switchTab(tabId, btnEl) {
   if (btnEl) btnEl.classList.add('active');
   else { const b = document.querySelector('[data-tab="'+tabId+'"]'); if(b) b.classList.add('active'); }
   const panel = document.getElementById('panel-'+tabId); if(panel) panel.classList.add('active');
+  const appContainer = document.querySelector('.app-container');
+  if (appContainer) appContainer.classList.toggle('dashboard-expanded', tabId === 'dashboard');
+  if (tabId === 'dashboard') {
+    if (typeof renderUsageDashboard === 'function') renderUsageDashboard();
+    if (typeof syncUsageDashboardNow === 'function') syncUsageDashboardNow(false);
+  }
 }
 
 /* ── Speech Rate Control ──────────────────────────────────── */
@@ -2860,16 +2866,21 @@ function confirmRoomAndStart() {
   document.getElementById('activeRoomLabel').innerHTML = `<i class="fas fa-location-dot"></i> ${esc(room)}`;
   document.getElementById('roomGate').classList.remove('open');
   if (shouldRecord) recordUsageSession(room);
+  else if (typeof renderUsageDashboard === 'function') renderUsageDashboard();
   roomChangeOnly = false;
 }
 function recordUsageSession(room) {
   const now = new Date();
   const log = { id: (crypto.randomUUID ? crypto.randomUUID() : `${now.getTime()}-${Math.random().toString(16).slice(2)}`), room, timestamp: now.toISOString(), dateKey: `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`, dateLabel: new Intl.DateTimeFormat('th-TH',{day:'2-digit',month:'2-digit',year:'2-digit'}).format(now), count: 1 };
+  if (typeof saveLocalLiveUsageEvent === 'function') saveLocalLiveUsageEvent(log);
   syncUsageToSheet(log);
 }
 async function syncUsageToSheet(log) {
   try {
     await fetch(GOOGLE_SHEETS_ENDPOINT, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(log), keepalive:true });
+    if (typeof syncUsageDashboardNow === 'function') {
+      setTimeout(() => syncUsageDashboardNow(false), 1800);
+    }
   } catch (err) {
     console.warn('Usage event could not be sent to the private reporting sheet.');
   }

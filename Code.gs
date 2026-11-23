@@ -17,7 +17,7 @@ function doPost(e) {
     const log = getOrCreateSheet_(ss, 'usage_log', ['event_id', 'room', 'date_be', 'started_at_utc', 'date_key', 'count']);
     const ids = log.getLastRow() > 1 ? log.getRange(2, 1, log.getLastRow() - 1, 1).getValues().flat() : [];
     if (ids.indexOf(payload.id) === -1) {
-      log.appendRow([String(payload.id), String(payload.room).slice(0, 60), String(payload.dateLabel), String(payload.timestamp), String(payload.dateKey || ''), 1]);
+      log.appendRow([String(payload.id), String(payload.room).slice(0, 60), "'" + String(payload.dateLabel), String(payload.timestamp), String(payload.dateKey || ''), Number(payload.count) || 1]);
       rebuildSummary_(ss, log);
     }
     return json_({ ok: true });
@@ -126,9 +126,51 @@ function doGet(e) {
       if (!bytes || !bytes.length) throw new Error('Empty speech response');
       return jsonpOrJson_({ ok: true, audio: Utilities.base64Encode(bytes) }, callback);
     }
+    if (action === 'usage-stats' || action === 'usage' || action === 'stats') {
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      const log = getOrCreateSheet_(ss, 'usage_log', ['event_id', 'room', 'date_be', 'started_at_utc', 'date_key', 'count']);
+      const lastRow = log.getLastRow();
+      const rawRows = lastRow > 1 ? log.getRange(2, 1, lastRow - 1, 6).getValues() : [];
+      const records = [];
+      for (let i = 0; i < rawRows.length; i++) {
+        const row = rawRows[i];
+        const id = String(row[0] || '').trim();
+        const room = String(row[1] || '').trim();
+        if (!room) continue;
+        const rawTs = row[3];
+        const ts = rawTs instanceof Date ? rawTs.toISOString() : String(rawTs || '').trim();
+        const rawDateKey = row[4];
+        let dateKey = '';
+        if (rawDateKey instanceof Date) {
+          dateKey = Utilities.formatDate(rawDateKey, 'Asia/Bangkok', 'yyyy-MM-dd');
+        } else {
+          dateKey = String(rawDateKey || '').trim();
+        }
+        if (!dateKey && ts) {
+          const parsed = new Date(ts);
+          if (!isNaN(parsed.getTime())) {
+            dateKey = Utilities.formatDate(parsed, 'Asia/Bangkok', 'yyyy-MM-dd');
+          }
+        }
+        const count = Number(row[5]) || 1;
+        records.push({
+          id: id || ('row_' + (i + 2)),
+          room: room,
+          ts: ts,
+          dateKey: dateKey,
+          count: count
+        });
+      }
+      return jsonpOrJson_({
+        ok: true,
+        updatedAt: new Date().toISOString(),
+        totalRows: records.length,
+        records: records
+      }, callback);
+    }
     // Preserve the previous JSON health response for callers outside the
-    // AI Translator. Only the two explicitly named interpreter actions use JSONP.
-    return json_({ ok: true, service: 'HEAL Lingua usage logger' });
+    // AI Translator. Only the explicitly named actions use JSONP.
+    return jsonpOrJson_({ ok: true, service: 'HEAL Lingua usage logger' }, callback);
   } catch (err) {
     return jsonpOrJson_({ ok: false, error: String(err && err.message || err) }, callback);
   }
@@ -169,10 +211,12 @@ function rebuildSummary_(ss, log) {
   const totals = {};
   values.forEach(row => {
     const room = String(row[1]);
-    const date = String(row[2]);
-    const dateKey = String(row[4]);
+    const dateKey = row[4] instanceof Date
+      ? Utilities.formatDate(row[4], 'Asia/Bangkok', 'yyyy-MM-dd')
+      : String(row[4] || '');
+    const date = dateKey || String(row[2]);
     const key = `${dateKey}|${room}`;
-    if (!totals[key]) totals[key] = { room, date, dateKey, count: 0 };
+    if (!totals[key]) totals[key] = { room, date: "'" + date, dateKey, count: 0 };
     totals[key].count += Number(row[5]) || 1;
   });
   const rows = Object.values(totals).sort((a, b) => b.dateKey.localeCompare(a.dateKey) || a.room.localeCompare(b.room));

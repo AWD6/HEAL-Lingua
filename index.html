@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link rel="stylesheet" href="style.css?v=ja1">
+  <link rel="stylesheet" href="style.css?v=dash1">
 </head>
 <body>
 
@@ -58,6 +58,7 @@
     <div class="usage-tools">
       <span id="activeRoomLabel">ยังไม่ได้เลือกห้อง</span>
       <button type="button" onclick="openRoomGate(false)"><i class="fas fa-door-open"></i> เปลี่ยนห้อง</button>
+      <button type="button" class="usage-dash-btn" onclick="openUsageDashboardTab()"><i class="fas fa-chart-pie"></i> Dashboard สถิติ <span class="usage-dash-badge" id="headerTotalUsageBadge">264 ครั้ง</span></button>
     </div>
   </header>
 
@@ -98,6 +99,12 @@
         <span class="tab-label-en">AI Translator</span>
         <span class="tab-label-th">AI ล่ามสด</span>
         <span class="ai-live-badge">LIVE</span>
+      </button>
+      <button class="tab-btn tab-btn-dash" data-tab="dashboard" onclick="switchTab('dashboard',this)">
+        <i class="fas fa-chart-pie"></i>
+        <span class="tab-label-en">Dashboard</span>
+        <span class="tab-label-th">สถิติการใช้</span>
+        <span class="dash-live-badge">REAL-TIME</span>
       </button>
     </div>
 
@@ -330,6 +337,10 @@
         <p class="interpreter-disclaimer"><i class="fas fa-circle-info"></i> ต้องอนุญาตไมโครโฟนและใช้ผ่าน HTTPS/localhost; ระบบจำกัดการแปลไว้เฉพาะคู่ไทยกับภาษาที่เลือก เสียงพม่าส่ง Google Cloud Speech-to-Text เพื่อถอดเสียง และข้อความส่ง Google Translate เพื่อแปล โปรดหลีกเลี่ยงชื่อ/ข้อมูลระบุตัวตนผู้ป่วยและตรวจทานก่อนใช้ทางการแพทย์</p>
       </section>
     </div>
+    <!-- Usage Analytics Dashboard Panel -->
+    <div class="tab-panel" id="panel-dashboard">
+      <div id="dashboardRoot"></div>
+    </div>
   </section>
 
   <div class="app-footer">HEAL Lingua · Healthcare Empathy Across Languages</div>
@@ -455,7 +466,8 @@
 <script src="translations.js?v=ja1"></script>
 <script src="translator-config.js?v=4"></script>
 <script src="interpreter-stt.js?v=3"></script>
-<script src="script.js?v=ja2"></script>
+<script src="script.js?v=dash1"></script>
+<script src="dashboard.js?v=dash1"></script>
 </body>
 </html>
 
